@@ -1,0 +1,2372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creative Library - Project Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232733;
+    --border: #2e3345;
+    --text: #e1e4ed;
+    --text-muted: #8b8fa3;
+    --accent: #6c5ce7;
+    --accent-light: #a29bfe;
+    --green: #00b894;
+    --green-bg: rgba(0,184,148,0.12);
+    --yellow: #fdcb6e;
+    --yellow-bg: rgba(253,203,110,0.12);
+    --blue: #74b9ff;
+    --blue-bg: rgba(116,185,255,0.12);
+    --red: #ff7675;
+    --red-bg: rgba(255,118,117,0.12);
+    --orange: #e17055;
+    --orange-bg: rgba(225,112,85,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a1d27 0%, #232733 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--accent-light), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header-subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .epic-link {
+    color: var(--accent-light);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .epic-link:hover { background: var(--surface2); border-color: var(--accent); }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { border-color: var(--accent); background: var(--surface); }
+  .btn-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-refresh { background: transparent; }
+  .refresh-spinner { display: none; animation: spin 1s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .summary-strip {
+    display: flex;
+    gap: 16px;
+    padding: 20px 40px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .summary-card {
+    flex: 0 0 auto;
+    min-width: 160px;
+    padding: 16px 20px;
+    background: var(--bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .summary-card.overall {
+    min-width: 200px;
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(108,92,231,0.08), rgba(162,155,254,0.04));
+  }
+  .summary-card-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .summary-card-value {
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .summary-card-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .summary-progress {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .summary-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .view-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .view-toggle .btn { border: none; border-radius: 0; }
+  .filter-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-left: 16px;
+  }
+  .filter-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-right: 4px;
+  }
+  .filter-chip {
+    padding: 4px 12px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .filter-chip:hover { border-color: var(--accent-light); color: var(--text); }
+  .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .search-box {
+    margin-left: auto;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    width: 220px;
+  }
+  .search-box::placeholder { color: var(--text-muted); }
+  .search-box:focus { outline: none; border-color: var(--accent); }
+
+  .main { padding: 24px 40px; }
+
+  /* === TABLE VIEW === */
+  .category-section {
+    margin-bottom: 28px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  .category-header:hover { background: var(--surface2); }
+  .category-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .category-chevron {
+    transition: transform 0.2s;
+    color: var(--text-muted);
+  }
+  .category-chevron.collapsed { transform: rotate(-90deg); }
+  .category-title {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .category-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--surface2);
+    color: var(--text-muted);
+  }
+  .category-header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .category-progress-bar {
+    width: 160px;
+    height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .category-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .category-pct {
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 42px;
+    text-align: right;
+  }
+  .task-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .task-table th, .task-table td { overflow: hidden; text-overflow: ellipsis; }
+  .task-table .col-task { width: 22%; }
+  .task-table .col-desc { width: 28%; }
+  .task-table .col-status { width: 12%; }
+  .task-table .col-effort { width: 7%; }
+  .task-table .col-dev { width: 13%; }
+  .task-table .col-beta { width: 7%; }
+  .task-table .col-jira { width: 11%; }
+  .task-table th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    padding: 10px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+  }
+  .task-table td {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .task-table tr:last-child td { border-bottom: none; }
+  .task-table tr { transition: background 0.15s; }
+  .task-table tr:hover { background: rgba(108,92,231,0.04); }
+  .task-table tr.done { background: rgba(0,184,148,0.05); }
+  .task-table tr.done td:first-child { box-shadow: inset 3px 0 0 var(--green); }
+
+  .checkbox-cell {
+    width: 40px;
+    text-align: center;
+  }
+  .task-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin: 0 auto;
+  }
+  .task-checkbox:hover { border-color: var(--accent); }
+  .task-checkbox.checked {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .task-checkbox.checked::after {
+    content: '\2713';
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .task-checkbox.jira-done {
+    background: var(--blue);
+    border-color: var(--blue);
+    cursor: default;
+  }
+  .task-checkbox.jira-done::after {
+    content: '\2713';
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .task-name { font-weight: 500; }
+  .task-desc {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .status-done { background: var(--green-bg); color: var(--green); }
+  .status-in-progress { background: var(--blue-bg); color: var(--blue); }
+  .status-not-started { background: var(--surface2); color: var(--text-muted); }
+  .status-blocked { background: var(--red-bg); color: var(--red); }
+  .status-pr { background: var(--yellow-bg); color: var(--yellow); }
+  .status-verification { background: var(--orange-bg); color: var(--orange); }
+
+  .jira-link {
+    color: var(--accent-light);
+    text-decoration: none;
+    font-size: 12px;
+    font-family: monospace;
+  }
+  .jira-link:hover { text-decoration: underline; }
+  .beta-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .beta-yes { background: var(--green-bg); color: var(--green); }
+  .beta-no { background: var(--surface2); color: var(--text-muted); }
+
+  .developer-tag {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .effort-tag {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* === CHART VIEW === */
+  .charts-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+  }
+  .chart-card.full-width {
+    grid-column: 1 / -1;
+  }
+  .chart-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .donut-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+  }
+  .donut-svg { width: 180px; height: 180px; }
+  .donut-center {
+    font-size: 32px;
+    font-weight: 700;
+  }
+  .donut-center-label {
+    font-size: 12px;
+    fill: var(--text-muted);
+  }
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .bar-chart { display: flex; flex-direction: column; gap: 14px; }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .bar-label {
+    width: 160px;
+    font-size: 13px;
+    flex-shrink: 0;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bar-track {
+    flex: 1;
+    height: 24px;
+    background: var(--bg);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    min-width: fit-content;
+    white-space: nowrap;
+  }
+  .bar-pct {
+    width: 46px;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .stacked-bar-track {
+    flex: 1;
+    height: 24px;
+    background: var(--bg);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+  }
+  .stacked-segment {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+
+  .developer-chart { display: flex; flex-direction: column; gap: 12px; }
+  .dev-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .dev-name {
+    width: 120px;
+    font-size: 13px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .dev-bar-track {
+    flex: 1;
+    height: 20px;
+    background: var(--bg);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+  }
+  .dev-bar-done { background: var(--green); height: 100%; }
+  .dev-bar-wip { background: var(--blue); height: 100%; }
+  .dev-bar-todo { background: var(--surface2); height: 100%; }
+  .dev-count {
+    width: 40px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .timeline-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .timeline-label {
+    width: 160px;
+    text-align: right;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .timeline-bar {
+    flex: 1;
+    position: relative;
+    height: 20px;
+  }
+
+  .hidden { display: none !important; }
+
+  .last-updated {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .area-label {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--surface2);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Inline editing */
+  .editable {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .editable:hover {
+    border-color: var(--border);
+    background: var(--surface2);
+  }
+  .inline-input {
+    background: var(--bg);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 13px;
+    padding: 3px 6px;
+    width: 100%;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(108,92,231,0.2);
+  }
+  .inline-input:focus { border-color: var(--accent-light); }
+  .autocomplete-wrapper { position: relative; }
+  .autocomplete-list {
+    position: fixed;
+    z-index: 400;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    max-height: 180px;
+    overflow-y: auto;
+    min-width: 180px;
+  }
+  .autocomplete-item {
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .autocomplete-item:hover, .autocomplete-item.selected {
+    background: var(--surface2);
+  }
+  .autocomplete-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* Add task */
+  .add-task-btn {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    border: 1px dashed var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+  .add-task-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(108,92,231,0.08); }
+  .create-form { display: flex; flex-direction: column; gap: 18px; }
+  .create-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .create-form-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+  }
+  .create-form-label .required { color: var(--accent-light); }
+  .create-form input, .create-form textarea, .create-form select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    padding: 10px 12px;
+    font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .create-form input:focus, .create-form textarea:focus, .create-form select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,92,231,0.15);
+  }
+  .create-form input::placeholder, .create-form textarea::placeholder {
+    color: #4a4e63;
+  }
+  .create-form textarea { resize: vertical; min-height: 70px; }
+  .create-form select { cursor: pointer; }
+  .create-form-row { display: flex; gap: 14px; }
+  .create-form-row .create-form-group { flex: 1; }
+  .create-form-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+  .create-jira-section {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .create-jira-toggle {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--text); cursor: pointer;
+    font-weight: 500;
+  }
+  .create-jira-epic {
+    display: flex; flex-direction: column; gap: 6px;
+    padding-left: 42px;
+  }
+  .create-jira-epic select { font-size: 12px; padding: 8px 10px; }
+  .btn-create {
+    background: linear-gradient(135deg, var(--accent), #7c6cf0);
+    border-color: var(--accent);
+    color: white;
+    font-weight: 500;
+    padding: 10px 20px;
+  }
+  .btn-create:hover { filter: brightness(1.1); box-shadow: 0 4px 12px rgba(108,92,231,0.3); }
+  .btn-create:disabled { opacity: 0.5; cursor: not-allowed; filter: none; box-shadow: none; }
+
+  /* Status dropdown */
+  .status-dropdown-wrapper { display: inline-block; }
+  .status-badge.clickable { cursor: pointer; }
+  .status-badge.clickable:hover { filter: brightness(1.3); outline: 1px solid var(--accent); }
+  .status-dropdown {
+    position: fixed;
+    z-index: 300;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    min-width: 170px;
+    padding: 4px 0;
+    animation: dropIn 0.12s ease-out;
+  }
+  @keyframes dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .status-option {
+    padding: 8px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.1s;
+  }
+  .status-option:hover { background: var(--surface2); }
+  .status-option .status-badge { pointer-events: none; }
+  .status-option.active { background: rgba(108,92,231,0.12); }
+  .status-option.active::after { content: '\2713'; margin-left: auto; color: var(--accent-light); font-weight: 700; font-size: 13px; }
+  .status-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 299;
+  }
+
+  /* Hide-done toggle */
+  .toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+    user-select: none;
+  }
+  .toggle-track {
+    width: 32px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    position: relative;
+    transition: all 0.2s;
+  }
+  .toggle-track.on { background: var(--accent); border-color: var(--accent); }
+  .toggle-knob {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    transition: transform 0.2s;
+  }
+  .toggle-track.on .toggle-knob { transform: translateX(14px); }
+
+  /* Bi-weekly report modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.15s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    width: 680px;
+    max-width: 90vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.2s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-size: 17px; font-weight: 600; }
+  .modal-close {
+    width: 28px; height: 28px;
+    border: none; background: transparent;
+    color: var(--text-muted); cursor: pointer;
+    border-radius: 6px; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { background: var(--surface2); color: var(--text); }
+  .modal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-nav-btn {
+    width: 32px; height: 32px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface2); color: var(--text);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .modal-nav-btn:hover { border-color: var(--accent); }
+  .modal-period {
+    font-size: 15px; font-weight: 600;
+    min-width: 200px; text-align: center;
+  }
+  .modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .report-section {
+    margin-bottom: 20px;
+  }
+  .report-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .report-count {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .report-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .report-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: var(--bg);
+    font-size: 13px;
+  }
+  .report-item-cat {
+    font-size: 11px;
+    color: var(--text-muted);
+    min-width: 80px;
+  }
+  .report-item-jira {
+    font-size: 11px;
+    color: var(--accent-light);
+    font-family: monospace;
+    margin-left: auto;
+    text-decoration: none;
+  }
+  .report-empty {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-style: italic;
+    padding: 8px 12px;
+  }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .btn-copy {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .btn-copy:hover { filter: brightness(1.1); }
+  .btn-copy.copied { background: var(--green); border-color: var(--green); }
+
+  @media (max-width: 1200px) {
+    .charts-container { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .header, .controls, .main, .summary-strip { padding-left: 16px; padding-right: 16px; }
+    .summary-strip { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Creative Library - Project Dashboard</h1>
+    <div class="header-subtitle">H1 2026 Plan Tracker</div>
+  </div>
+  <div class="header-right">
+    <a class="epic-link" href="https://tbla.atlassian.net/browse/DEV-213547" target="_blank">DEV-213547</a>
+    <button class="btn" onclick="openBiWeeklyReport()" title="Generate bi-weekly summary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Bi-Weekly
+    </button>
+    <button class="btn btn-refresh" onclick="refreshFromSheet()" title="Refresh data from Google Sheet + Jira">
+      <svg class="refresh-spinner" id="refreshSpinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      Sync
+    </button>
+  </div>
+</div>
+
+<div class="summary-strip" id="summaryStrip"></div>
+
+<div class="controls">
+  <div class="view-toggle">
+    <button class="btn btn-active" id="btnTable" onclick="setView('table')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      Table
+    </button>
+    <button class="btn" id="btnChart" onclick="setView('chart')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg>
+      Charts
+    </button>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Area:</span>
+    <button class="filter-chip active" data-filter="all" onclick="setAreaFilter('all', this)">All</button>
+    <button class="filter-chip" data-filter="Backstage" onclick="setAreaFilter('Backstage', this)">Backstage</button>
+    <button class="filter-chip" data-filter="Realize - UI" onclick="setAreaFilter('Realize - UI', this)">Realize UI</button>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Beta:</span>
+    <button class="filter-chip" data-beta="all" onclick="setBetaFilter('all', this)">All</button>
+    <button class="filter-chip active" data-beta="yes" onclick="setBetaFilter('yes', this)">Must for Beta</button>
+  </div>
+  <div class="toggle-switch" onclick="toggleHideDone()">
+    <div class="toggle-track" id="hideDoneTrack"><div class="toggle-knob"></div></div>
+    <span>Hide Done</span>
+  </div>
+  <input class="search-box" type="text" placeholder="Search tasks..." oninput="setSearch(this.value)">
+</div>
+
+<div class="main">
+  <div id="tableView"></div>
+  <div id="chartView" class="hidden"></div>
+</div>
+
+<script>
+// ==================== CONFIG ====================
+// Paste your Google Apps Script Web App URL here after deploying:
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvudrrRASf9Cyp_WgKM2F7AuRwvZpL14U-wSKizpnbRR9qOxXA6ZUCERyBSeCaHpiz/exec';
+
+// Fallback data used when no Google Sheet is configured
+const FALLBACK_TASKS = [
+  { id: 1, area: "Backstage", category: "DB Model", task: "Schema Change - Add creative_id field", description: "Add creative_id field to trc.sp_campaign_inventory_instructions", effort: 1, status: "Done", developer: "Alaa Haddad", beta: true, jira: "DEV-213691" },
+  { id: 2, area: "Backstage", category: "DB Model", task: "Schema Change - Support new item type on instruction", description: "Support new item type on instruction (item from library)", effort: 0.5, status: "Done", developer: "Roi Golan", beta: true, jira: null },
+  { id: 3, area: "Backstage", category: "DB Model", task: "Schema Change - Deprecate Links table", description: "Deprecate Links table", effort: 0, status: "Not Started Yet", developer: "", beta: false, jira: null },
+  { id: 4, area: "Backstage", category: "Reports", task: "Ads Report", description: "Change wide-config query to return Ad id and Creative id", effort: 2, status: "In Progress", developer: "Alaa Haddad", beta: true, jira: "DEV-214054" },
+  { id: 5, area: "Backstage", category: "Reports", task: "Get All Creatives", description: "Change APICreativeReportRow (change usage of APIAdBase list)", effort: 1, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-214233" },
+  { id: 6, area: "Backstage", category: "Reports", task: "Realtime Report", description: "Same changes as campaign-content-multi-source-v2", effort: 1, status: "Not Started Yet", developer: "", beta: false, jira: "DEV-214052" },
+  { id: 7, area: "Backstage", category: "Items", task: "Get", description: "No behavioral change. Expose creative_id on API POJO", effort: 0.5, status: "In Progress", developer: "Roi Golan", beta: true, jira: "DEV-214068" },
+  { id: 8, area: "Backstage", category: "Items", task: "Create (Bulk)", description: "Create new Creative and Item (Ad) - main flow from realize", effort: 0.5, status: "In Progress", developer: "Roi Golan", beta: true, jira: "DEV-214063" },
+  { id: 9, area: "Backstage", category: "Items", task: "Create (single)", description: "Flow used for crawl cases (URL only). RSS via realize", effort: 0, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-214075" },
+  { id: 10, area: "Backstage", category: "Items", task: "Duplicate", description: "If item unchanged & had creative: Link to same creative", effort: 0, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 11, area: "Backstage", category: "Items", task: "Update (unified)", description: "Update instruction and creative association logic", effort: 2, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-214069" },
+  { id: 12, area: "Backstage", category: "Items", task: "Delete", description: "No behavioral change", effort: 0, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 13, area: "Backstage", category: "Items", task: "addItemsToCampaign (mass)", description: "Should behave like Create (Bulk) with creative_id propagation", effort: 2, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-214073" },
+  { id: 14, area: "Backstage", category: "Items", task: "Update (Bulk)", description: "No special effort once single item update is supported", effort: 0.5, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-214074" },
+  { id: 15, area: "Backstage", category: "Items", task: "Delete (Bulk)", description: "No change", effort: 0, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 16, area: "Backstage", category: "Items", task: "createOrUpdateCampaignItems (csv tool)", description: "Flow somewhat different needs investigation", effort: 0.5, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-214099" },
+  { id: 17, area: "Backstage", category: "Items", task: "getAccountCampaignItems (csv tool)", description: "Expose creative_id", effort: 0.5, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-214100" },
+  { id: 18, area: "Backstage", category: "Items", task: "isBulkResubmittable", description: "No behavioral change", effort: 0, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 19, area: "Backstage", category: "Items", task: "bulkResubmit", description: "No behavioral change", effort: 0, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 20, area: "Backstage", category: "Creatives", task: "Schema Change - Remove creative status", description: "Remove creative status from UI/API", effort: 1, status: "In Progress", developer: "Ido Ofir", beta: true, jira: "DEV-214501" },
+  { id: 21, area: "Backstage", category: "Creatives", task: "Remove irrelevant fields", description: "Remove irrelevant fields from creative", effort: 0, status: "In Progress", developer: "All", beta: true, jira: "DEV-214498" },
+  { id: 22, area: "Backstage", category: "Creatives", task: "Get", description: "Get single creative", effort: 0.5, status: "In Progress", developer: "Ohad Biran", beta: true, jira: "DEV-215188" },
+  { id: 23, area: "Backstage", category: "Creatives", task: "Get All", description: "Get list of creatives (As is)", effort: 0, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 24, area: "Backstage", category: "Creatives", task: "Create", description: "Create new Creative with instruction type adjustments", effort: 1.5, status: "In Progress", developer: "", beta: true, jira: "DEV-214089" },
+  { id: 25, area: "Backstage", category: "Creatives", task: "Update", description: "Update Creative & linked instructions", effort: 1, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-214090" },
+  { id: 26, area: "Backstage", category: "Creatives", task: "Delete", description: "Delete Creative & linked instructions", effort: 0.5, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-214094" },
+  { id: 27, area: "Backstage", category: "Campaign", task: "Get - remove Is_creative_library", description: "Remove Is_creative_library field", effort: 0.5, status: "Done", developer: "", beta: true, jira: "DEV-214517" },
+  { id: 28, area: "Backstage", category: "Campaign", task: "Create - cleanup special flows", description: "Cleanup all is creative library special flows", effort: 0.5, status: "Done", developer: "", beta: true, jira: null },
+  { id: 29, area: "Backstage", category: "Campaign", task: "Update", description: "No change", effort: 0, status: "Done", developer: "", beta: true, jira: null },
+  { id: 30, area: "Backstage", category: "Campaign", task: "Delete", description: "No change", effort: 0, status: "Done", developer: "", beta: true, jira: null },
+  { id: 31, area: "Backstage", category: "Campaign", task: "Duplicate", description: "Support duplication of items and link to original template", effort: 1, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-216040" },
+  { id: 32, area: "Realize - UI", category: "UI", task: "Remove play/pause from library report", description: "Remove status column", effort: 0.5, status: "Done", developer: "Naama Weber", beta: true, jira: "DEV-213619" },
+  { id: 33, area: "Realize - UI", category: "UI", task: "New Assign", description: "New assign flow", effort: 2, status: "Done", developer: "Alaa Haddad", beta: true, jira: "DEV-214091" },
+  { id: 34, area: "Realize - UI", category: "UI", task: "Creative form - remove branding and profile", description: "Remove branding text and profile section", effort: 0.5, status: "Done", developer: "Naama Weber, Nitzan Moyal", beta: true, jira: "DEV-214093" },
+  { id: 35, area: "Realize - UI", category: "UI", task: "Assign ads - UI + GW", description: "Assign ads UI and gateway integration", effort: 2, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 36, area: "Realize - UI", category: "UI", task: "By Ads report - manage actions", description: "Remove is_library indication and handle actions", effort: 0.5, status: "In Progress", developer: "Naama Weber", beta: true, jira: "DEV-214101" },
+  { id: 37, area: "Realize - UI", category: "UI", task: "Calculate delivery status in ads report", description: "Calculate delivery status", effort: 0.5, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 38, area: "Realize - UI", category: "UI", task: "Campaign form - branding text", description: "Branding text in campaign form", effort: 0.5, status: "Done", developer: "Nitzan Moyal", beta: true, jira: "DEV-214111" },
+  { id: 39, area: "Realize - UI", category: "UI", task: "Library report adjustments", description: "Various adjustments to library report", effort: 0.5, status: "Done", developer: "", beta: true, jira: "DEV-213619" },
+  { id: 40, area: "Realize - UI", category: "UI", task: "RSS form", description: "RSS creation form", effort: 0.5, status: "Done", developer: "Naama Weber", beta: false, jira: "DEV-213623" },
+  { id: 41, area: "Realize - UI", category: "UI", task: "New tabs styling (assign)", description: "Redesign of assign tabs and actions", effort: 0.5, status: "In Progress", developer: "Naama Weber", beta: true, jira: "DEV-215156" },
+  { id: 42, area: "Realize - UI", category: "UI", task: "Edit pop ups (edit creative)", description: "Edit creative popup", effort: 0.5, status: "In Progress", developer: "Alaa Haddad", beta: true, jira: "DEV-216140" },
+  { id: 43, area: "Realize - UI", category: "UI", task: "Show assigned campaigns in edit form", description: "Show assigned campaigns section in edit creative form", effort: 0.5, status: "In Progress", developer: "Nitzan Moyal", beta: true, jira: "DEV-215476" },
+  { id: 44, area: "Realize - UI", category: "UI", task: "Carousel form", description: "Carousel creation form", effort: 0.5, status: "Not Started Yet", developer: "", beta: false, jira: null },
+  { id: 45, area: "Realize - UI", category: "UI", task: "Playwright fix", description: "Fix playwright tests", effort: 2, status: "Not Started Yet", developer: "", beta: true, jira: "DEV-215882" },
+  { id: 46, area: "Backstage", category: "Investigation", task: "Campaign id null", description: "Investigate campaign id null scenarios", effort: 1.5, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 47, area: "Backstage", category: "Investigation", task: "Instruction type", description: "Instruction type investigation", effort: 1.5, status: "Done", developer: "", beta: true, jira: "DEV-214766" },
+  { id: 48, area: "Backstage", category: "Investigation", task: "is_creative_library on campaign (TRC/Vespa)", description: "Investigate is creative library on campaign in TRC and Vespa", effort: 2, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 49, area: "Backstage", category: "Investigation", task: "Social to display", description: "Social to display investigation", effort: 0, status: "Not Started Yet", developer: "", beta: false, jira: null },
+  { id: 50, area: "Backstage", category: "Investigation", task: "Carousel", description: "Carousel investigation", effort: 1, status: "Not Started Yet", developer: "", beta: false, jira: null },
+  { id: 51, area: "Backstage", category: "Investigation", task: "TRC - Cleanup item profile", description: "Cleanup item profile in TRC", effort: 1, status: "Not Started Yet", developer: "", beta: false, jira: null },
+  { id: 52, area: "Backstage", category: "Investigation", task: "Vespa - Cleanup item profile", description: "Cleanup item profile in Vespa", effort: 1, status: "Not Started Yet", developer: "", beta: false, jira: null },
+  { id: 53, area: "Backstage", category: "Investigation", task: "Vespa - Fidder debezium triggers", description: "Vespa fidder debezium triggers", effort: 0, status: "Not Started Yet", developer: "", beta: true, jira: null },
+  { id: 54, area: "Backstage", category: "Investigation", task: "History log on creative", description: "Support history log for creatives", effort: 2, status: "Not Started Yet", developer: "", beta: false, jira: null },
+  { id: 55, area: "Backstage", category: "Rollout", task: "Rollout", description: "Rollout plan and execution", effort: 1, status: "Not Started Yet", developer: "", beta: true, jira: null },
+];
+
+// ==================== TASK DATA (loaded from sheet or fallback) ====================
+let TASKS = [];
+
+function normalizeTask(t) {
+  return {
+    id: Number(t.id),
+    area: t.area || '',
+    category: t.category || '',
+    task: t.task || '',
+    desc: t.description || t.desc || '',
+    effort: Number(t.effort) || 0,
+    status: t.status || 'Not Started Yet',
+    developer: t.developer || '',
+    beta: (t.beta === true || t.beta === 'Yes' || t.beta === 'yes' || t.beta === 'TRUE'),
+    jira: (t.jira && t.jira !== '-' && t.jira !== '') ? t.jira : null,
+    jiraStatus: t.jiraStatus || null,
+  };
+}
+
+// Jira ticket -> status mapping for quick lookup
+const JIRA_DONE_STATUSES = new Set(["Closed", "Done", "Verified", "Pending Release"]);
+const JIRA_PROGRESS_STATUSES = new Set(["In Development", "In Progress", "Pull Request", "In Verification", "In Grooming"]);
+
+// ==================== STATE ====================
+let currentView = 'table';
+let areaFilter = 'all';
+let betaFilter = 'yes';
+let searchQuery = '';
+let hideDone = JSON.parse(localStorage.getItem('cl-dashboard-hideDone') ?? 'true');
+let collapsedCategories = JSON.parse(localStorage.getItem('cl-dashboard-collapsed') || '{}');
+let openDropdownId = null;
+let sheetConnected = false;
+let statusLog = JSON.parse(localStorage.getItem('cl-dashboard-statusLog') || '{}');
+
+const ALL_STATUSES = ['Not Started Yet', 'In Progress', 'In Verification', 'Pull Request', 'Blocked', 'Done'];
+
+// ==================== GOOGLE SHEETS ====================
+async function loadFromSheet() {
+  if (!APPS_SCRIPT_URL) return false;
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL);
+    if (!resp.ok) return false;
+    const data = await resp.json();
+    if (data.success && data.tasks) {
+      TASKS = data.tasks.map(normalizeTask);
+      if (data.team && data.team.length > 0) {
+        data.team.forEach(name => { if (!TEAM_MEMBERS.includes(name)) TEAM_MEMBERS.push(name); });
+      }
+      sheetConnected = true;
+      return true;
+    }
+  } catch (e) {
+    console.warn('Could not load from Google Sheet:', e.message);
+  }
+  return false;
+}
+
+async function writeFieldToSheet(taskId, field, value) {
+  if (!APPS_SCRIPT_URL) return;
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'updateField', id: taskId, field: field, value: value }),
+    });
+  } catch (e) {
+    console.warn('Could not write to Google Sheet:', e.message);
+  }
+}
+
+function startEdit(taskId, field, currentValue, el) {
+  if (el.querySelector('.inline-input')) return; // already editing
+  const originalHtml = el.innerHTML;
+  const input = document.createElement('input');
+  input.className = 'inline-input';
+  input.value = currentValue;
+  el.innerHTML = '';
+  el.appendChild(input);
+  input.focus();
+  input.select();
+
+  function save() {
+    const newValue = input.value.trim();
+    const task = TASKS.find(t => t.id === taskId);
+    if (task && newValue !== String(currentValue)) {
+      // Map field names to task properties
+      const fieldMap = { task: 'task', description: 'desc', effort: 'effort', developer: 'developer', jira: 'jira' };
+      const prop = fieldMap[field] || field;
+      task[prop] = field === 'effort' ? (Number(newValue) || 0) : newValue;
+      if (field === 'jira') task.jira = (newValue && newValue !== '-') ? newValue : null;
+      writeFieldToSheet(taskId, field, field === 'effort' ? (Number(newValue) || 0) : newValue);
+    }
+    render();
+  }
+
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { el.innerHTML = originalHtml; }
+  });
+}
+
+const TEAM_MEMBERS = [
+  'Chen Shamir', 'Chen Amitai', 'Alaa Haddad', 'Roi Golan', 'Ohad Biran',
+  'Naama Weber', 'Nitzan Moyal', 'Coral Ram', 'Elit Manes', 'Ido Ofir'
+];
+
+// All Jira tickets under DEV-213547 epic tree
+const EPIC_TICKETS = [
+  { key: 'DEV-216554', summary: 'Add instruction type filter in get creative flow' },
+  { key: 'DEV-216533', summary: 'CL - Item - Unify Item CRUD flows' },
+  { key: 'DEV-216334', summary: 'CL - Creative - Remove verificationPixel & viewabilityTag' },
+  { key: 'DEV-216140', summary: 'Pop up on save in edit creative form' },
+  { key: 'DEV-216040', summary: 'Duplicate Campaign with Ads' },
+  { key: 'DEV-215882', summary: 'Playwright New Assign flow' },
+  { key: 'DEV-215883', summary: 'Remove filter is_creative_library from campaign dropdown' },
+  { key: 'DEV-215881', summary: 'Remove profile section from edit & duplicate forms' },
+  { key: 'DEV-215834', summary: 'Disable Creative Library Playwright tests' },
+  { key: 'DEV-215540', summary: 'CL - Creative - Remove isActive field - UI' },
+  { key: 'DEV-215478', summary: 'Move scheduling back into ad edit and duplicate form' },
+  { key: 'DEV-215476', summary: 'Show assigned campaigns in edit creative form' },
+  { key: 'DEV-215475', summary: 'Remove running/pause status from edit creative form' },
+  { key: 'DEV-215387', summary: 'Add Ads List to APICreative' },
+  { key: 'DEV-215385', summary: 'Support Uploader and Crawler - investigation' },
+  { key: 'DEV-215214', summary: 'Push API tailors to fit new APICreative' },
+  { key: 'DEV-215211', summary: 'History log producer - delete approval status' },
+  { key: 'DEV-215210', summary: 'APISupportedPushFields - Delete approval status' },
+  { key: 'DEV-215205', summary: 'Ads-push proto to fit new APICreative' },
+  { key: 'DEV-215188', summary: 'CL - Creative - validate Get creative flow' },
+  { key: 'DEV-215156', summary: 'Redesign of assign tabs and actions' },
+  { key: 'DEV-214863', summary: 'CL - Creative - Replace APICreativeAppInstall' },
+  { key: 'DEV-214862', summary: 'CL - Creative - Replace APICreativeDisclaimer' },
+  { key: 'DEV-214861', summary: 'CL - Creative - Replace APICreativePerformanceVideoData' },
+  { key: 'DEV-214860', summary: 'CL - Creative - Replace APICreativeRating' },
+  { key: 'DEV-214859', summary: 'CL - Creative - Replace APICreativeCTA' },
+  { key: 'DEV-214768', summary: 'CL - Items - API transformations - refactor transformers' },
+  { key: 'DEV-214766', summary: 'CL - Creative - Creative instruction type' },
+  { key: 'DEV-214517', summary: 'CL - Campaign - Remove isCreativeLibraryCampaign field' },
+  { key: 'DEV-214508', summary: 'CL - Creative - Remove status field from APIAdBase' },
+  { key: 'DEV-214507', summary: 'CL - Creative - Change mediaRatioAdjustments to creativeCrop' },
+  { key: 'DEV-214505', summary: 'CL - Creative - Remove profile fields' },
+  { key: 'DEV-214504', summary: 'CL - Creative - Remove brandingText fields' },
+  { key: 'DEV-214503', summary: 'CL - Creative - Remove customId field' },
+  { key: 'DEV-214502', summary: 'CL - Creative - Remove isActive field' },
+  { key: 'DEV-214501', summary: 'CL - Creative - Change status field' },
+  { key: 'DEV-214500', summary: 'CL - Creative - Remove approvalStatus' },
+  { key: 'DEV-214499', summary: 'CL - Creative - Remove Content Review fields' },
+  { key: 'DEV-214498', summary: 'CL - Creative - Remove Hierarchy fields' },
+  { key: 'DEV-214234', summary: 'Support creative library in Creative Library Report' },
+  { key: 'DEV-214233', summary: 'CL - BS - Creatives report - update logic' },
+  { key: 'DEV-214112', summary: 'Align on-demand to new library solution' },
+  { key: 'DEV-214111', summary: 'Remove branding text' },
+  { key: 'DEV-214108', summary: 'GW + UI remove all transformations of Library' },
+  { key: 'DEV-214103', summary: 'Creative name mandatory' },
+  { key: 'DEV-214101', summary: 'UI by ads report actions' },
+  { key: 'DEV-214100', summary: 'CL - Items - bulk operations - getAccountCampaignItems' },
+  { key: 'DEV-214099', summary: 'CL - Items - bulk operations - createOrUpdate' },
+  { key: 'DEV-214094', summary: 'Adjust Delete flow' },
+  { key: 'DEV-214093', summary: 'Remove profile section from creative create & edit forms' },
+  { key: 'DEV-214092', summary: 'Adjust Get and Get list of creatives' },
+  { key: 'DEV-214091', summary: 'Assign Ads Entity' },
+  { key: 'DEV-214090', summary: 'Adjust Update creative flow' },
+  { key: 'DEV-214089', summary: 'CREATE Creative - verify flow for new requirements' },
+  { key: 'DEV-214079', summary: 'CL - Items - patch items - implement endpoint' },
+  { key: 'DEV-214075', summary: 'CL - Items - single create - investigate needed changes' },
+  { key: 'DEV-214074', summary: 'CL - Items - bulk update' },
+  { key: 'DEV-214073', summary: 'CL - Items - create (mass)' },
+  { key: 'DEV-214069', summary: 'CL - Items - update single (unified)' },
+  { key: 'DEV-214068', summary: 'CL - Items - get item - expose creative_id' },
+  { key: 'DEV-214063', summary: 'CL - Items - bulk create' },
+  { key: 'DEV-214054', summary: 'CL - wide config VIEW - add creative_id field' },
+  { key: 'DEV-214052', summary: 'CL - Realtime Ads Reports - add creative_id' },
+  { key: 'DEV-214051', summary: 'CL - BS - Ads Reports XML - add creative_id column' },
+  { key: 'DEV-213809', summary: 'CL - Expose creativeId field on APICampaignItem' },
+  { key: 'DEV-213691', summary: 'Add creative_id column to instructions' },
+  { key: 'DEV-213623', summary: 'Add separate creation flow for RSS' },
+  { key: 'DEV-213621', summary: 'Remove creation mode section from native creative form' },
+  { key: 'DEV-213619', summary: 'Creative library module - changes to table columns' },
+  { key: 'DEV-213614', summary: 'Remove profile section from creative create & edit forms' },
+  { key: 'DEV-210818', summary: 'Playwright - Preview Section refactor' },
+  { key: 'DEV-209418', summary: 'Delete Creative Library permissions' },
+  { key: 'DEV-205444', summary: 'Realtime report add Playwright' },
+];
+
+function getAllDevelopers() {
+  const devs = new Set(TEAM_MEMBERS);
+  TASKS.forEach(t => {
+    if (t.developer) {
+      t.developer.split(',').map(d => d.trim()).filter(Boolean).forEach(d => devs.add(d));
+    }
+  });
+  return [...devs].sort();
+}
+
+function getInitials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function startEditDeveloper(taskId, currentValue, el) {
+  if (el.querySelector('.inline-input')) return;
+  const allDevs = getAllDevelopers();
+
+  const input = document.createElement('input');
+  input.className = 'inline-input';
+  input.value = currentValue;
+  input.placeholder = 'Type name...';
+  el.innerHTML = '';
+  el.appendChild(input);
+  input.focus();
+  input.select();
+
+  let listEl = null;
+  let selectedIdx = -1;
+
+  function showSuggestions(query) {
+    removeSuggestions();
+    const q = query.toLowerCase();
+    const matches = q ? allDevs.filter(d => d.toLowerCase().includes(q)) : allDevs;
+    if (matches.length === 0) return;
+
+    listEl = document.createElement('div');
+    listEl.className = 'autocomplete-list';
+    document.body.appendChild(listEl);
+
+    const rect = input.getBoundingClientRect();
+    listEl.style.top = (rect.bottom + 4) + 'px';
+    listEl.style.left = rect.left + 'px';
+    listEl.style.minWidth = Math.max(rect.width, 180) + 'px';
+
+    matches.forEach((name, idx) => {
+      const item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      item.innerHTML = `<div class="autocomplete-avatar">${getInitials(name)}</div>${name}`;
+      item.onmousedown = function(e) {
+        e.preventDefault();
+        input.value = name;
+        removeSuggestions();
+        input.blur();
+      };
+      listEl.appendChild(item);
+    });
+    selectedIdx = -1;
+  }
+
+  function removeSuggestions() {
+    if (listEl) { listEl.remove(); listEl = null; }
+    selectedIdx = -1;
+  }
+
+  function navigateSuggestions(dir) {
+    if (!listEl) return;
+    const items = listEl.querySelectorAll('.autocomplete-item');
+    if (items.length === 0) return;
+    items.forEach(i => i.classList.remove('selected'));
+    selectedIdx = (selectedIdx + dir + items.length) % items.length;
+    items[selectedIdx].classList.add('selected');
+    input.value = items[selectedIdx].textContent;
+  }
+
+  input.addEventListener('input', function() { showSuggestions(input.value); });
+  input.addEventListener('focus', function() { showSuggestions(input.value); });
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); navigateSuggestions(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); navigateSuggestions(-1); }
+    else if (e.key === 'Enter') { e.preventDefault(); removeSuggestions(); input.blur(); }
+    else if (e.key === 'Escape') { removeSuggestions(); render(); }
+  });
+
+  input.addEventListener('blur', function() {
+    removeSuggestions();
+    const newValue = input.value.trim();
+    const task = TASKS.find(t => t.id === taskId);
+    if (task && newValue !== currentValue) {
+      task.developer = newValue;
+      writeFieldToSheet(taskId, 'developer', newValue);
+    }
+    render();
+  });
+}
+
+function toggleBeta(taskId) {
+  const task = TASKS.find(t => t.id === taskId);
+  if (!task) return;
+  task.beta = !task.beta;
+  writeFieldToSheet(taskId, 'beta', task.beta ? 'Yes' : 'No');
+  render();
+}
+
+function getAvailableJiraTickets() {
+  const usedKeys = new Set(TASKS.map(t => t.jira).filter(Boolean));
+  return EPIC_TICKETS.filter(t => !usedKeys.has(t.key));
+}
+
+function startEditJira(taskId, currentValue, el) {
+  if (el.querySelector('.inline-input')) return;
+  const available = getAvailableJiraTickets();
+  // Also include the current ticket so it shows as selected
+  const currentTicket = EPIC_TICKETS.find(t => t.key === currentValue);
+  const allOptions = currentTicket ? [currentTicket, ...available.filter(t => t.key !== currentValue)] : available;
+
+  const input = document.createElement('input');
+  input.className = 'inline-input';
+  input.value = currentValue || '';
+  input.placeholder = 'DEV-...';
+  el.innerHTML = '';
+  el.appendChild(input);
+  input.focus();
+  input.select();
+
+  let listEl = null;
+  let selectedIdx = -1;
+
+  function showSuggestions(query) {
+    removeSuggestions();
+    const q = query.toLowerCase();
+    const matches = q ? allOptions.filter(t => t.key.toLowerCase().includes(q) || t.summary.toLowerCase().includes(q)) : allOptions;
+    if (matches.length === 0) return;
+
+    listEl = document.createElement('div');
+    listEl.className = 'autocomplete-list';
+    listEl.style.maxHeight = '220px';
+    document.body.appendChild(listEl);
+
+    const rect = input.getBoundingClientRect();
+    let top = rect.bottom + 4;
+    if (top + 220 > window.innerHeight) top = rect.top - 224;
+    listEl.style.top = top + 'px';
+    listEl.style.left = rect.left + 'px';
+    listEl.style.minWidth = '320px';
+
+    matches.slice(0, 30).forEach((ticket, idx) => {
+      const item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      item.style.fontSize = '12px';
+      item.innerHTML = `<span style="color:var(--accent-light);font-family:monospace;min-width:90px">${ticket.key}</span><span style="color:var(--text-muted)">${ticket.summary}</span>`;
+      item.onmousedown = function(e) {
+        e.preventDefault();
+        input.value = ticket.key;
+        removeSuggestions();
+        input.blur();
+      };
+      listEl.appendChild(item);
+    });
+    selectedIdx = -1;
+  }
+
+  function removeSuggestions() {
+    if (listEl) { listEl.remove(); listEl = null; }
+    selectedIdx = -1;
+  }
+
+  function navigateSuggestions(dir) {
+    if (!listEl) return;
+    const items = listEl.querySelectorAll('.autocomplete-item');
+    if (items.length === 0) return;
+    items.forEach(i => i.classList.remove('selected'));
+    selectedIdx = (selectedIdx + dir + items.length) % items.length;
+    items[selectedIdx].classList.add('selected');
+    items[selectedIdx].scrollIntoView({ block: 'nearest' });
+    input.value = items[selectedIdx].querySelector('span').textContent;
+  }
+
+  input.addEventListener('input', function() { showSuggestions(input.value); });
+  input.addEventListener('focus', function() { showSuggestions(input.value); });
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); navigateSuggestions(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); navigateSuggestions(-1); }
+    else if (e.key === 'Enter') { e.preventDefault(); removeSuggestions(); input.blur(); }
+    else if (e.key === 'Escape') { removeSuggestions(); render(); }
+  });
+
+  input.addEventListener('blur', function() {
+    removeSuggestions();
+    const newValue = input.value.trim();
+    const task = TASKS.find(t => t.id === taskId);
+    if (task && newValue !== (currentValue || '')) {
+      task.jira = (newValue && newValue !== '-') ? newValue : null;
+      writeFieldToSheet(taskId, 'jira', newValue || '');
+    }
+    render();
+  });
+}
+
+// ==================== HELPERS ====================
+function isTaskDone(task) {
+  if (task.status === 'Done') return true;
+  if (task.jiraStatus && JIRA_DONE_STATUSES.has(task.jiraStatus)) return true;
+  return false;
+}
+
+function getEffectiveStatus(task) {
+  if (isTaskDone(task)) return 'Done';
+  if (task.jiraStatus && JIRA_PROGRESS_STATUSES.has(task.jiraStatus)) return task.jiraStatus;
+  return task.status;
+}
+
+function getStatusClass(status) {
+  if (status === 'Done' || JIRA_DONE_STATUSES.has(status)) return 'status-done';
+  if (status === 'In Progress' || status === 'In Development' || status === 'In Grooming') return 'status-in-progress';
+  if (status === 'Pull Request') return 'status-pr';
+  if (status === 'In Verification') return 'status-verification';
+  if (status === 'Blocked') return 'status-blocked';
+  return 'status-not-started';
+}
+
+function getAllFilteredTasks() {
+  return TASKS.filter(t => {
+    if (areaFilter !== 'all' && t.area !== areaFilter) return false;
+    if (betaFilter === 'yes' && !t.beta) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return t.task.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) ||
+             t.category.toLowerCase().includes(q) || t.developer.toLowerCase().includes(q) ||
+             (t.jira && t.jira.toLowerCase().includes(q));
+    }
+    return true;
+  });
+}
+
+function getFilteredTasks() {
+  return getAllFilteredTasks().filter(t => {
+    if (hideDone && isTaskDone(t)) return false;
+    return true;
+  });
+}
+
+function getCategories(tasks) {
+  const cats = {};
+  tasks.forEach(t => {
+    const key = `${t.area} > ${t.category}`;
+    if (!cats[key]) cats[key] = { area: t.area, category: t.category, tasks: [] };
+    cats[key].tasks.push(t);
+  });
+  return Object.values(cats);
+}
+
+function getCategoryStats(tasks) {
+  const DEFAULT_WEIGHT = 0.25; // minimum weight for 0-effort tasks
+  const total = tasks.length;
+  const done = tasks.filter(t => isTaskDone(t)).length;
+  const inProgress = tasks.filter(t => !isTaskDone(t) && (t.status === 'In Progress' || (t.jiraStatus && JIRA_PROGRESS_STATUSES.has(t.jiraStatus)))).length;
+
+  // Effort-weighted percentage
+  let totalWeight = 0, doneWeight = 0;
+  tasks.forEach(t => {
+    const w = t.effort > 0 ? t.effort : DEFAULT_WEIGHT;
+    totalWeight += w;
+    if (isTaskDone(t)) doneWeight += w;
+  });
+  const pct = totalWeight > 0 ? Math.round((doneWeight / totalWeight) * 100) : 0;
+
+  return { total, done, inProgress, pct, totalWeight, doneWeight };
+}
+
+function getProgressColor(pct) {
+  if (pct >= 80) return 'var(--green)';
+  if (pct >= 50) return 'var(--blue)';
+  if (pct >= 25) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function recordStatusChange(task, newStatus) {
+  const today = new Date().toISOString().slice(0, 10);
+  statusLog[task.id] = { status: newStatus, date: today };
+  localStorage.setItem('cl-dashboard-statusLog', JSON.stringify(statusLog));
+}
+
+function toggleDone(id) {
+  const task = TASKS.find(t => t.id === id);
+  if (!task) return;
+  const newStatus = isTaskDone(task) ? 'Not Started Yet' : 'Done';
+  task.status = newStatus;
+  recordStatusChange(task, newStatus);
+  writeFieldToSheet(id, 'status', newStatus);
+  render();
+}
+
+function toggleHideDone() {
+  hideDone = !hideDone;
+  localStorage.setItem('cl-dashboard-hideDone', JSON.stringify(hideDone));
+  document.getElementById('hideDoneTrack').classList.toggle('on', hideDone);
+  render();
+}
+
+function setManualStatus(id, newStatus, event) {
+  if (event) event.stopPropagation();
+  const task = TASKS.find(t => t.id === id);
+  if (task) {
+    task.status = newStatus;
+    recordStatusChange(task, newStatus);
+  }
+  writeFieldToSheet(id, 'status', newStatus);
+  closeDropdown();
+  render();
+}
+
+function openStatusDropdown(id, event) {
+  event.stopPropagation();
+  if (openDropdownId === id) { closeDropdown(); return; }
+  closeDropdown();
+  openDropdownId = id;
+
+  const badge = event.currentTarget;
+  const rect = badge.getBoundingClientRect();
+  const task = TASKS.find(t => t.id === id);
+  const effectiveStatus = getEffectiveStatus(task);
+
+  // Build dropdown options
+  let optionsHtml = '';
+  ALL_STATUSES.forEach(s => {
+    optionsHtml += `<div class="status-option ${effectiveStatus === s ? 'active' : ''}" onclick="setManualStatus(${id},'${s}',event)">
+      <span class="status-badge ${getStatusClass(s)}">${s}</span>
+    </div>`;
+  });
+
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'status-overlay';
+  overlay.onclick = closeDropdown;
+  document.body.appendChild(overlay);
+
+  // Create dropdown
+  const dropdown = document.createElement('div');
+  dropdown.className = 'status-dropdown';
+  dropdown.innerHTML = optionsHtml;
+  document.body.appendChild(dropdown);
+
+  // Position: below the badge, flip up if near bottom
+  let top = rect.bottom + 4;
+  let left = rect.left;
+  const dropHeight = ALL_STATUSES.length * 36 + 8;
+  if (top + dropHeight > window.innerHeight) {
+    top = rect.top - dropHeight - 4;
+  }
+  if (left + 170 > window.innerWidth) {
+    left = window.innerWidth - 180;
+  }
+  dropdown.style.top = top + 'px';
+  dropdown.style.left = left + 'px';
+}
+
+function closeDropdown() {
+  openDropdownId = null;
+  document.querySelectorAll('.status-dropdown, .status-overlay').forEach(el => el.remove());
+}
+
+function toggleCategory(key) {
+  collapsedCategories[key] = !collapsedCategories[key];
+  localStorage.setItem('cl-dashboard-collapsed', JSON.stringify(collapsedCategories));
+  const body = document.getElementById(`cat-body-${key.replace(/[^a-zA-Z0-9]/g, '_')}`);
+  const chevron = document.getElementById(`cat-chev-${key.replace(/[^a-zA-Z0-9]/g, '_')}`);
+  if (body) body.classList.toggle('hidden');
+  if (chevron) chevron.classList.toggle('collapsed');
+}
+
+// ==================== VIEWS ====================
+function setView(v) {
+  currentView = v;
+  document.getElementById('btnTable').classList.toggle('btn-active', v === 'table');
+  document.getElementById('btnChart').classList.toggle('btn-active', v === 'chart');
+  document.getElementById('tableView').classList.toggle('hidden', v !== 'table');
+  document.getElementById('chartView').classList.toggle('hidden', v !== 'chart');
+  render();
+}
+
+function setAreaFilter(f, el) {
+  areaFilter = f;
+  document.querySelectorAll('[data-filter]').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
+  render();
+}
+
+function setBetaFilter(f, el) {
+  betaFilter = f;
+  document.querySelectorAll('[data-beta]').forEach(c => c.classList.toggle('active', c.dataset.beta === f));
+  render();
+}
+
+function setSearch(q) {
+  searchQuery = q;
+  render();
+}
+
+// ==================== RENDER ====================
+function renderSummary() {
+  const tasks = getAllFilteredTasks();
+  const stats = getCategoryStats(tasks);
+  const categories = getCategories(tasks);
+
+  let totalEffort = 0;
+  let doneEffort = 0;
+  tasks.forEach(t => {
+    totalEffort += t.effort;
+    if (isTaskDone(t)) doneEffort += t.effort;
+  });
+
+  let html = `
+    <div class="summary-card overall">
+      <div class="summary-card-label">Overall Progress</div>
+      <div class="summary-card-value" style="color:${getProgressColor(stats.pct)}">${stats.pct}%</div>
+      <div class="summary-card-sub">${stats.done} of ${stats.total} tasks</div>
+      <div class="summary-progress"><div class="summary-progress-fill" style="width:${stats.pct}%;background:${getProgressColor(stats.pct)}"></div></div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label">Effort Done</div>
+      <div class="summary-card-value">${doneEffort}<span style="font-size:14px;color:var(--text-muted)">/${totalEffort}w</span></div>
+      <div class="summary-card-sub">weeks estimated</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label">In Progress</div>
+      <div class="summary-card-value" style="color:var(--blue)">${stats.inProgress}</div>
+      <div class="summary-card-sub">active tasks</div>
+    </div>
+  `;
+
+  categories.forEach(cat => {
+    const s = getCategoryStats(cat.tasks);
+    html += `
+      <div class="summary-card">
+        <div class="summary-card-label">${cat.category}</div>
+        <div class="summary-card-value" style="color:${getProgressColor(s.pct)}">${s.pct}%</div>
+        <div class="summary-card-sub">${s.done}/${s.total}</div>
+        <div class="summary-progress"><div class="summary-progress-fill" style="width:${s.pct}%;background:${getProgressColor(s.pct)}"></div></div>
+      </div>
+    `;
+  });
+
+  document.getElementById('summaryStrip').innerHTML = html;
+}
+
+function renderTable() {
+  const allTasks = getAllFilteredTasks();
+  const allCategories = getCategories(allTasks);
+  const visibleTasks = getFilteredTasks();
+  let html = '';
+
+  allCategories.forEach(cat => {
+    const key = `${cat.area}_${cat.category}`;
+    const safeKey = key.replace(/[^a-zA-Z0-9]/g, '_');
+    const stats = getCategoryStats(cat.tasks);
+    const visibleCatTasks = cat.tasks.filter(t => visibleTasks.includes(t));
+    const collapsed = collapsedCategories[key];
+
+    html += `
+      <div class="category-section">
+        <div class="category-header" onclick="toggleCategory('${key}')">
+          <div class="category-header-left">
+            <svg class="category-chevron ${collapsed ? 'collapsed' : ''}" id="cat-chev-${safeKey}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <span class="category-title">${cat.category}</span>
+            <span class="area-label">${cat.area}</span>
+            <span class="category-badge">${stats.total} tasks</span>
+            ${CATEGORY_EPIC_MAP[cat.category] ? `<a class="epic-link" href="https://tbla.atlassian.net/browse/${CATEGORY_EPIC_MAP[cat.category]}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;padding:2px 8px">${CATEGORY_EPIC_MAP[cat.category]}</a>` : ''}
+            <button class="add-task-btn" onclick="event.stopPropagation();openCreateTask('${cat.area}','${cat.category}')" title="Add task to ${cat.category}">+</button>
+          </div>
+          <div class="category-header-right">
+            <div class="category-progress-bar">
+              <div class="category-progress-fill" style="width:${stats.pct}%;background:${getProgressColor(stats.pct)}"></div>
+            </div>
+            <span class="category-pct" style="color:${getProgressColor(stats.pct)}">${stats.pct}%</span>
+          </div>
+        </div>
+        <div id="cat-body-${safeKey}" class="${collapsed ? 'hidden' : ''}">
+          <table class="task-table">
+            <thead>
+              <tr>
+                <th class="col-task">Task</th>
+                <th class="col-desc">Description</th>
+                <th class="col-status">Status</th>
+                <th class="col-effort">Effort</th>
+                <th class="col-dev">Developer</th>
+                <th class="col-beta">Beta</th>
+                <th class="col-jira">Jira</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+    visibleCatTasks.forEach(t => {
+      const done = isTaskDone(t);
+      const effectiveStatus = getEffectiveStatus(t);
+      const isJiraDone = t.jiraStatus && JIRA_DONE_STATUSES.has(t.jiraStatus) && t.status !== 'Done';
+      const checkboxClass = isJiraDone ? 'task-checkbox jira-done' : (done ? 'task-checkbox checked' : 'task-checkbox');
+
+      const escDesc = t.desc.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const escTask = t.task.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const escDev = (t.developer || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const escJira = (t.jira || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+      html += `
+              <tr class="${done ? 'done' : ''}">
+                <td class="task-name editable" onclick="startEdit(${t.id},'task','${escTask}',this)">${t.task}</td>
+                <td class="task-desc editable" onclick="startEdit(${t.id},'description','${escDesc}',this)" title="${escDesc}">${t.desc}</td>
+                <td>
+                  <div class="status-dropdown-wrapper" id="status-wrap-${t.id}">
+                    <span class="status-badge clickable ${getStatusClass(effectiveStatus)}" onclick="openStatusDropdown(${t.id}, event)" title="Click to change status">${effectiveStatus} <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg></span>
+                  </div>
+                </td>
+                <td class="effort-tag editable" onclick="startEdit(${t.id},'effort','${t.effort}',this)">${t.effort > 0 ? t.effort + 'w' : '-'}</td>
+                <td class="developer-tag editable" onclick="startEditDeveloper(${t.id},'${escDev}',this)">${t.developer || '-'}</td>
+                <td><span class="beta-badge ${t.beta ? 'beta-yes' : 'beta-no'}" style="cursor:pointer" onclick="toggleBeta(${t.id})" title="Click to toggle">${t.beta ? 'Beta' : 'No'}</span></td>
+                <td class="editable" onclick="startEditJira(${t.id},'${escJira}',this)">${t.jira ? `<a class="jira-link" href="https://tbla.atlassian.net/browse/${t.jira}" target="_blank" onclick="event.stopPropagation()">${t.jira}</a>` : '-'}</td>
+              </tr>`;
+    });
+
+    html += `</tbody></table></div></div>`;
+  });
+
+  document.getElementById('tableView').innerHTML = html;
+}
+
+function renderCharts() {
+  const tasks = getAllFilteredTasks();
+  const categories = getCategories(tasks);
+  const overallStats = getCategoryStats(tasks);
+
+  // Status distribution
+  let doneCount = 0, wipCount = 0, todoCount = 0, blockedCount = 0;
+  tasks.forEach(t => {
+    if (isTaskDone(t)) doneCount++;
+    else if (t.status === 'In Progress' || (t.jiraStatus && JIRA_PROGRESS_STATUSES.has(t.jiraStatus))) wipCount++;
+    else if (t.jiraStatus === 'Blocked') blockedCount++;
+    else todoCount++;
+  });
+
+  // Donut chart
+  const total = tasks.length;
+  const donutData = [
+    { label: 'Done', count: doneCount, color: 'var(--green)' },
+    { label: 'In Progress', count: wipCount, color: 'var(--blue)' },
+    { label: 'Not Started', count: todoCount, color: '#3d4259' },
+    { label: 'Blocked', count: blockedCount, color: 'var(--red)' },
+  ].filter(d => d.count > 0);
+
+  let donutSvg = '';
+  let cumPct = 0;
+  const r = 70, cx = 90, cy = 90;
+  const circumference = 2 * Math.PI * r;
+
+  donutData.forEach(d => {
+    const pct = d.count / total;
+    const dashLen = pct * circumference;
+    const dashOff = -cumPct * circumference;
+    donutSvg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.color}" stroke-width="18"
+      stroke-dasharray="${dashLen} ${circumference - dashLen}" stroke-dashoffset="${dashOff}"
+      transform="rotate(-90 ${cx} ${cy})" />`;
+    cumPct += pct;
+  });
+
+  let legendHtml = donutData.map(d =>
+    `<div class="legend-item"><div class="legend-dot" style="background:${d.color}"></div>${d.label}: ${d.count} (${Math.round(d.count/total*100)}%)</div>`
+  ).join('');
+
+  // Category bar chart
+  let barHtml = '';
+  categories.forEach(cat => {
+    const s = getCategoryStats(cat.tasks);
+    const wipInCat = cat.tasks.filter(t => !isTaskDone(t) && (t.status === 'In Progress' || (t.jiraStatus && JIRA_PROGRESS_STATUSES.has(t.jiraStatus)))).length;
+    const donePct = s.total > 0 ? (s.done / s.total * 100) : 0;
+    const wipPct = s.total > 0 ? (wipInCat / s.total * 100) : 0;
+    barHtml += `
+      <div class="bar-row">
+        <div class="bar-label">${cat.category}</div>
+        <div class="stacked-bar-track">
+          <div class="stacked-segment" style="width:${donePct}%;background:var(--green)"></div>
+          <div class="stacked-segment" style="width:${wipPct}%;background:var(--blue)"></div>
+        </div>
+        <div class="bar-pct" style="color:${getProgressColor(s.pct)}">${s.pct}%</div>
+      </div>`;
+  });
+
+  // Developer workload
+  const devMap = {};
+  tasks.forEach(t => {
+    if (!t.developer) return;
+    t.developer.split(',').map(d => d.trim()).filter(Boolean).forEach(dev => {
+      if (!devMap[dev]) devMap[dev] = { done: 0, wip: 0, todo: 0 };
+      if (isTaskDone(t)) devMap[dev].done++;
+      else if (t.status === 'In Progress' || (t.jiraStatus && JIRA_PROGRESS_STATUSES.has(t.jiraStatus))) devMap[dev].wip++;
+      else devMap[dev].todo++;
+    });
+  });
+
+  let devHtml = '';
+  Object.entries(devMap).sort((a, b) => (b[1].done + b[1].wip + b[1].todo) - (a[1].done + a[1].wip + a[1].todo)).forEach(([name, d]) => {
+    const dt = d.done + d.wip + d.todo;
+    devHtml += `
+      <div class="dev-row">
+        <div class="dev-name">${name}</div>
+        <div class="dev-bar-track">
+          <div class="dev-bar-done" style="width:${d.done/dt*100}%"></div>
+          <div class="dev-bar-wip" style="width:${d.wip/dt*100}%"></div>
+          <div class="dev-bar-todo" style="width:${d.todo/dt*100}%"></div>
+        </div>
+        <div class="dev-count">${dt}</div>
+      </div>`;
+  });
+
+  // Effort by category
+  let effortHtml = '';
+  categories.forEach(cat => {
+    let totalEff = 0, doneEff = 0;
+    cat.tasks.forEach(t => {
+      totalEff += t.effort;
+      if (isTaskDone(t)) doneEff += t.effort;
+    });
+    if (totalEff === 0) return;
+    const pct = Math.round(doneEff / totalEff * 100);
+    effortHtml += `
+      <div class="bar-row">
+        <div class="bar-label">${cat.category}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background:${getProgressColor(pct)}">${doneEff}w</div>
+        </div>
+        <div class="bar-pct">${totalEff}w</div>
+      </div>`;
+  });
+
+  document.getElementById('chartView').innerHTML = `
+    <div class="charts-container">
+      <div class="chart-card">
+        <div class="chart-title">Overall Status Distribution</div>
+        <div class="donut-container">
+          <svg class="donut-svg" viewBox="0 0 180 180">
+            ${donutSvg}
+            <text x="${cx}" y="${cy - 4}" text-anchor="middle" class="donut-center" fill="var(--text)">${overallStats.pct}%</text>
+            <text x="${cx}" y="${cy + 16}" text-anchor="middle" class="donut-center-label">complete</text>
+          </svg>
+          <div class="legend">${legendHtml}</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Progress by Category</div>
+        <div class="bar-chart">${barHtml}</div>
+        <div style="display:flex;gap:16px;margin-top:16px;justify-content:center">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Done</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>In Progress</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#3d4259"></div>Not Started</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Effort by Category (weeks)</div>
+        <div class="bar-chart">${effortHtml}</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Developer Workload</div>
+        <div class="developer-chart">${devHtml}</div>
+        <div style="display:flex;gap:16px;margin-top:16px;justify-content:center">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Done</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>In Progress</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--surface2)"></div>To Do</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  renderSummary();
+  if (currentView === 'table') renderTable();
+  else renderCharts();
+}
+
+async function refreshFromSheet() {
+  const spinner = document.getElementById('refreshSpinner');
+  const icon = document.getElementById('refreshIcon');
+  spinner.style.display = 'block';
+  icon.style.display = 'none';
+
+  const loaded = await loadFromSheet();
+  if (!loaded) {
+    // Also try Jira sync
+    await refreshJiraStatuses();
+  }
+  render();
+
+  spinner.style.display = 'none';
+  icon.style.display = 'block';
+}
+
+// ==================== JIRA SYNC ====================
+async function refreshJiraStatuses() {
+  // 1. Fetch sub-epics under DEV-213547
+  try {
+    const epicJql = 'parent = DEV-213547 AND issuetype = Epic ORDER BY key ASC';
+    const epicResp = await fetch(`https://tbla.atlassian.net/rest/api/2/search?jql=${encodeURIComponent(epicJql)}&fields=summary,status&maxResults=50`, {
+      credentials: 'include'
+    });
+    if (epicResp.ok) {
+      const epicData = await epicResp.json();
+      AVAILABLE_EPICS = [{ key: 'DEV-213547', summary: 'Creative Library Management (parent)' }];
+      epicData.issues.forEach(i => {
+        AVAILABLE_EPICS.push({ key: i.key, summary: i.fields.summary });
+      });
+      autoMapEpics();
+      console.info('Updated epic list:', AVAILABLE_EPICS.length, 'epics');
+    }
+  } catch (e) {
+    console.warn('Could not fetch epics:', e.message);
+  }
+
+  // 2. Fetch task statuses
+  const jiraTickets = TASKS.filter(t => t.jira).map(t => t.jira);
+  if (jiraTickets.length === 0) return;
+  const jql = `key in (${jiraTickets.join(',')})`;
+
+  try {
+    const resp = await fetch(`https://tbla.atlassian.net/rest/api/2/search?jql=${encodeURIComponent(jql)}&fields=status&maxResults=100`, {
+      credentials: 'include'
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      const statusMap = {};
+      data.issues.forEach(i => { statusMap[i.key] = i.fields.status.name; });
+      TASKS.forEach(t => {
+        if (t.jira && statusMap[t.jira]) {
+          t.jiraStatus = statusMap[t.jira];
+        }
+      });
+    } else {
+      console.warn('Jira API returned', resp.status, '- make sure you are logged into Jira in this browser');
+    }
+  } catch (e) {
+    console.warn('Could not reach Jira API:', e.message, '- CORS may block this from a local file. Try opening from a web server.');
+  }
+}
+
+// ==================== CREATE TASK ====================
+// Default mapping - gets updated on Sync from Jira
+let CATEGORY_EPIC_MAP = {
+  'DB Model': 'DEV-213552',
+  'Reports': 'DEV-213553',
+  'Items': 'DEV-213555',
+  'Creatives': 'DEV-213549',
+  'Campaign': 'DEV-214064',
+  'UI': 'DEV-213479',
+  'Investigation': 'DEV-213547',
+  'Rollout': 'DEV-216748',
+};
+
+// All known sub-epics under DEV-213547 - updated on Sync
+let AVAILABLE_EPICS = [
+  { key: 'DEV-213547', summary: 'Creative Library Management (parent)' },
+  { key: 'DEV-214234', summary: 'Creative Library Report' },
+  { key: 'DEV-214105', summary: 'Support TRC Preview for creative' },
+  { key: 'DEV-214102', summary: 'Support Uploader and Crawler' },
+  { key: 'DEV-214064', summary: 'Campaigns API changes' },
+  { key: 'DEV-213555', summary: 'Items API, Controller and CRUD operations' },
+  { key: 'DEV-213554', summary: 'Support History log for creatives' },
+  { key: 'DEV-213553', summary: 'By Ads reports (regular and Realtime)' },
+  { key: 'DEV-213552', summary: 'Instruction DB Model modifications' },
+  { key: 'DEV-213549', summary: 'Creative API, Controller and CRUD operations' },
+  { key: 'DEV-213479', summary: 'V2: Creative Library UI' },
+  { key: 'DEV-204032', summary: 'Enhance Creative Library performance report' },
+];
+
+// Keyword matching to auto-map categories to epics
+const EPIC_CATEGORY_KEYWORDS = {
+  'DB Model': ['db model', 'instruction', 'model modification'],
+  'Reports': ['report', 'ads report'],
+  'Items': ['items', 'item api'],
+  'Creatives': ['creative api', 'creative controller', 'crud'],
+  'Campaign': ['campaign'],
+  'UI': ['ui', 'v2'],
+  'Investigation': [],
+  'Rollout': ['rollout'],
+};
+
+function autoMapEpics() {
+  AVAILABLE_EPICS.forEach(epic => {
+    const s = epic.summary.toLowerCase();
+    for (const [cat, keywords] of Object.entries(EPIC_CATEGORY_KEYWORDS)) {
+      if (keywords.some(kw => s.includes(kw))) {
+        CATEGORY_EPIC_MAP[cat] = epic.key;
+      }
+    }
+  });
+}
+
+function openCreateTask(area, category) {
+  const epicKey = CATEGORY_EPIC_MAP[category] || 'DEV-213547';
+
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeCreateTask()">
+      <div class="modal" style="width:540px">
+        <div class="modal-header">
+          <div>
+            <span class="modal-title">Create New Task</span>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${area} &rsaquo; ${category}</div>
+          </div>
+          <button class="modal-close" onclick="closeCreateTask()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="create-form" id="createTaskForm">
+            <div class="create-form-group">
+              <div class="create-form-label">Task Name <span class="required">*</span></div>
+              <input type="text" id="ct-task" placeholder="e.g. Support new field on API">
+            </div>
+            <div class="create-form-group">
+              <div class="create-form-label">Description</div>
+              <textarea id="ct-desc" placeholder="What needs to be done..."></textarea>
+            </div>
+            <div class="create-form-row">
+              <div class="create-form-group">
+                <div class="create-form-label">Effort (weeks)</div>
+                <input type="number" id="ct-effort" value="0.5" step="0.5" min="0">
+              </div>
+              <div class="create-form-group">
+                <div class="create-form-label">Developer</div>
+                <input type="text" id="ct-dev" placeholder="Assign to...">
+              </div>
+              <div class="create-form-group">
+                <div class="create-form-label">Beta</div>
+                <select id="ct-beta"><option value="yes">Yes - Must for Beta</option><option value="no">No</option></select>
+              </div>
+            </div>
+            <div class="create-form-divider"></div>
+            <div class="create-jira-section">
+              <label class="create-jira-toggle">
+                <div class="toggle-track on" id="ct-jira-toggle" onclick="this.classList.toggle('on');document.getElementById('ct-epic-row').style.display=this.classList.contains('on')?'flex':'none'"><div class="toggle-knob"></div></div>
+                Create Jira ticket
+              </label>
+              <div class="create-jira-epic" id="ct-epic-row">
+                <div class="create-form-label">Under Epic</div>
+                <select id="ct-epic">
+                  ${AVAILABLE_EPICS.map(e => `<option value="${e.key}" ${e.key === epicKey ? 'selected' : ''}>${e.key} - ${e.summary}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeCreateTask()">Cancel</button>
+          <button class="btn btn-create" id="createBtn" onclick="submitCreateTask('${area}','${category}')">
+            Create Task
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+  closeCreateTask();
+  document.body.insertAdjacentHTML('beforeend', html);
+  const taskInput = document.getElementById('ct-task');
+  taskInput.focus();
+
+  // Escape to close, Ctrl/Cmd+Enter to submit
+  document.querySelector('.modal-overlay').addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeCreateTask();
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); document.getElementById('createBtn').click(); }
+  });
+
+  // Developer autocomplete on the dev field
+  const devInput = document.getElementById('ct-dev');
+  const allDevs = getAllDevelopers();
+  let listEl = null;
+
+  function showDevSuggestions(q) {
+    if (listEl) listEl.remove();
+    const matches = q ? allDevs.filter(d => d.toLowerCase().includes(q.toLowerCase())) : allDevs;
+    if (!matches.length) return;
+    listEl = document.createElement('div');
+    listEl.className = 'autocomplete-list';
+    document.body.appendChild(listEl);
+    const rect = devInput.getBoundingClientRect();
+    listEl.style.top = (rect.bottom + 4) + 'px';
+    listEl.style.left = rect.left + 'px';
+    listEl.style.minWidth = rect.width + 'px';
+    matches.forEach(name => {
+      const item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      item.innerHTML = '<div class="autocomplete-avatar">' + getInitials(name) + '</div>' + name;
+      item.onmousedown = e => { e.preventDefault(); devInput.value = name; if(listEl) listEl.remove(); listEl = null; };
+      listEl.appendChild(item);
+    });
+  }
+  devInput.addEventListener('input', () => showDevSuggestions(devInput.value));
+  devInput.addEventListener('focus', () => showDevSuggestions(devInput.value));
+  devInput.addEventListener('blur', () => { setTimeout(() => { if(listEl) listEl.remove(); listEl = null; }, 150); });
+}
+
+function closeCreateTask() {
+  const modal = document.querySelector('.modal-overlay');
+  if (modal) modal.remove();
+  // Clean up any leftover autocomplete
+  document.querySelectorAll('.autocomplete-list').forEach(el => el.remove());
+}
+
+async function submitCreateTask(area, category) {
+  const taskName = document.getElementById('ct-task').value.trim();
+  if (!taskName) { document.getElementById('ct-task').style.borderColor = 'var(--red)'; return; }
+
+  const desc = document.getElementById('ct-desc').value.trim();
+  const effort = parseFloat(document.getElementById('ct-effort').value) || 0;
+  const developer = document.getElementById('ct-dev').value.trim();
+  const beta = document.getElementById('ct-beta').value === 'yes';
+  const epicKey = document.getElementById('ct-epic').value;
+  const createJira = document.getElementById('ct-jira-toggle').classList.contains('on');
+
+  const btn = document.getElementById('createBtn');
+  btn.disabled = true;
+  btn.innerHTML = 'Creating...';
+
+  // Generate next ID
+  const maxId = Math.max(...TASKS.map(t => t.id), 0);
+  const newId = maxId + 1;
+
+  const newTask = {
+    id: newId, area, category, task: taskName, desc, effort,
+    status: 'Not Started Yet', developer, beta, jira: null, jiraStatus: null
+  };
+
+  // Try to create Jira ticket
+  if (createJira) {
+    try {
+      const resp = await fetch('https://tbla.atlassian.net/rest/api/2/issue', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: {
+            project: { key: 'DEV' },
+            issuetype: { name: 'Story' },
+            summary: taskName,
+            description: desc || taskName,
+            customfield_10014: epicKey,
+          }
+        })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        newTask.jira = data.key;
+        newTask.jiraStatus = 'New';
+      } else {
+        console.warn('Jira ticket creation failed:', resp.status);
+      }
+    } catch (e) {
+      console.warn('Could not create Jira ticket:', e.message);
+    }
+  }
+
+  // Add to local data
+  TASKS.push(newTask);
+
+  // Write to Google Sheet
+  if (APPS_SCRIPT_URL) {
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'addTask',
+          task: { id: newId, area, category, task: taskName, description: desc, effort, status: 'Not Started Yet', developer, beta: beta ? 'Yes' : 'No', jira: newTask.jira || '' }
+        }),
+      });
+    } catch (e) {
+      console.warn('Could not write to sheet:', e.message);
+    }
+  }
+
+  closeCreateTask();
+  render();
+}
+
+// ==================== BI-WEEKLY REPORT ====================
+const BIWEEKLY_START = new Date('2026-03-12');
+let currentPeriodOffset = 0;
+
+function getBiWeeklyPeriod(offset) {
+  const periodMs = 14 * 24 * 60 * 60 * 1000;
+  // Calculate which period "today" falls in
+  const now = new Date();
+  const elapsed = now - BIWEEKLY_START;
+  const currentPeriodIdx = Math.max(0, Math.floor(elapsed / periodMs));
+  const idx = currentPeriodIdx + offset;
+  if (idx < 0) return null;
+
+  const start = new Date(BIWEEKLY_START.getTime() + idx * periodMs);
+  const end = new Date(start.getTime() + periodMs - 1);
+  return { start, end, idx };
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getTasksForPeriod(period) {
+  const startStr = period.start.toISOString().slice(0, 10);
+  const endStr = period.end.toISOString().slice(0, 10);
+
+  // Tasks completed in this period
+  const completed = TASKS.filter(t => {
+    if (!isTaskDone(t)) return false;
+    const log = statusLog[t.id];
+    if (log && log.status === 'Done' && log.date >= startStr && log.date <= endStr) return true;
+    // For the first period (idx 0), include all pre-existing Done tasks
+    if (period.idx === 0 && !log) return true;
+    return false;
+  });
+
+  // Tasks currently in progress
+  const inProgress = TASKS.filter(t => {
+    if (isTaskDone(t)) return false;
+    const s = getEffectiveStatus(t);
+    return s === 'In Progress' || s === 'In Development' || s === 'Pull Request' || s === 'In Verification' || s === 'In Grooming';
+  });
+
+  return { completed, inProgress };
+}
+
+function renderBiWeeklyModal() {
+  const period = getBiWeeklyPeriod(currentPeriodOffset);
+  if (!period) return;
+  const { completed, inProgress } = getTasksForPeriod(period);
+  const periodLabel = `${formatDate(period.start)} - ${formatDate(period.end)}`;
+  const isCurrentPeriod = currentPeriodOffset === 0;
+
+  function renderTaskList(tasks, emptyMsg) {
+    if (tasks.length === 0) return `<div class="report-empty">${emptyMsg}</div>`;
+    return '<div class="report-list">' + tasks.map(t => {
+      const jiraHtml = t.jira ? `<a class="report-item-jira" href="https://tbla.atlassian.net/browse/${t.jira}" target="_blank">${t.jira}</a>` : '';
+      return `<div class="report-item">
+        <span class="report-item-cat">${t.category}</span>
+        <span>${t.task}</span>
+        ${t.developer ? `<span style="color:var(--text-muted);font-size:11px;margin-left:4px">(${t.developer})</span>` : ''}
+        ${jiraHtml}
+      </div>`;
+    }).join('') + '</div>';
+  }
+
+  const html = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeBiWeeklyReport()">
+      <div class="modal">
+        <div class="modal-header">
+          <span class="modal-title">Bi-Weekly Report</span>
+          <button class="modal-close" onclick="closeBiWeeklyReport()">&times;</button>
+        </div>
+        <div class="modal-nav">
+          <button class="modal-nav-btn" onclick="navigatePeriod(-1)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="modal-period">${periodLabel}${isCurrentPeriod ? ' (current)' : ''}</span>
+          <button class="modal-nav-btn" onclick="navigatePeriod(1)" ${isCurrentPeriod ? 'disabled style="opacity:0.3;cursor:default"' : ''}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="report-section">
+            <div class="report-section-title" style="color:var(--green)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Completed
+              <span class="report-count" style="background:var(--green-bg);color:var(--green)">${completed.length}</span>
+            </div>
+            ${renderTaskList(completed, 'No tasks completed in this period')}
+          </div>
+          <div class="report-section">
+            <div class="report-section-title" style="color:var(--blue)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              In Progress
+              <span class="report-count" style="background:var(--blue-bg);color:var(--blue)">${inProgress.length}</span>
+            </div>
+            ${renderTaskList(inProgress, 'No tasks in progress')}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeBiWeeklyReport()">Close</button>
+          <button class="btn btn-copy" id="copyReportBtn" onclick="copyReport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy Summary
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+  // Remove existing modal if any
+  closeBiWeeklyReport();
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function openBiWeeklyReport() {
+  currentPeriodOffset = 0;
+  renderBiWeeklyModal();
+}
+
+function closeBiWeeklyReport() {
+  const modal = document.querySelector('.modal-overlay');
+  if (modal) modal.remove();
+}
+
+function navigatePeriod(dir) {
+  const newOffset = currentPeriodOffset + dir;
+  if (newOffset > 0) return; // can't go to future
+  currentPeriodOffset = newOffset;
+  renderBiWeeklyModal();
+}
+
+function copyReport() {
+  const period = getBiWeeklyPeriod(currentPeriodOffset);
+  if (!period) return;
+  const { completed, inProgress } = getTasksForPeriod(period);
+  const periodLabel = `${formatDate(period.start)} - ${formatDate(period.end)}`;
+
+  let text = `Creative Library - Bi-Weekly Report\n${periodLabel}\n\n`;
+
+  text += `COMPLETED (${completed.length})\n`;
+  if (completed.length === 0) { text += '  (none)\n'; }
+  else { completed.forEach(t => { text += `  - [${t.category}] ${t.task}${t.jira ? ' (' + t.jira + ')' : ''}${t.developer ? ' - ' + t.developer : ''}\n`; }); }
+
+  text += `\nIN PROGRESS (${inProgress.length})\n`;
+  if (inProgress.length === 0) { text += '  (none)\n'; }
+  else { inProgress.forEach(t => { text += `  - [${t.category}] ${t.task}${t.jira ? ' (' + t.jira + ')' : ''}${t.developer ? ' - ' + t.developer : ''}\n`; }); }
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyReportBtn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Summary';
+    }, 2000);
+  });
+}
+
+// ==================== INIT ====================
+async function init() {
+  if (hideDone) document.getElementById('hideDoneTrack').classList.add('on');
+
+  // Try loading from Google Sheet first
+  const loaded = await loadFromSheet();
+  if (!loaded) {
+    // Fall back to embedded data
+    TASKS = FALLBACK_TASKS.map(normalizeTask);
+    console.info('Using local fallback data. Set APPS_SCRIPT_URL to connect to Google Sheet.');
+  }
+  render();
+}
+init();
+</script>
+</body>
+</html>
