@@ -2226,11 +2226,36 @@ async function refreshJiraStatuses() {
       const data = await resp.json();
       const statusMap = {};
       data.issues.forEach(i => { statusMap[i.key] = i.fields.status.name; });
+      const updates = [];
       TASKS.forEach(t => {
         if (t.jira && statusMap[t.jira]) {
+          const oldJiraStatus = t.jiraStatus;
           t.jiraStatus = statusMap[t.jira];
+          // Auto-update dashboard status when Jira says done
+          if (JIRA_DONE_STATUSES.has(t.jiraStatus) && t.status !== 'Done') {
+            t.status = 'Done';
+            updates.push(t);
+          }
+          // Auto-update to In Progress if Jira is in progress and dashboard still says Not Started
+          else if (JIRA_PROGRESS_STATUSES.has(t.jiraStatus) && t.status === 'Not Started Yet') {
+            t.status = 'In Progress';
+            updates.push(t);
+          }
         }
       });
+      // Write status changes back to Google Sheet
+      if (APPS_SCRIPT_URL && updates.length > 0) {
+        for (const t of updates) {
+          try {
+            await fetch(APPS_SCRIPT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain' },
+              body: JSON.stringify({ action: 'updateStatus', id: t.id, status: t.status }),
+            });
+          } catch (e) { /* silent */ }
+        }
+        console.info(`Synced ${updates.length} status changes from Jira to sheet`);
+      }
     } else {
       console.warn('Jira API returned', resp.status, '- make sure you are logged into Jira in this browser');
     }
