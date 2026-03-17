@@ -90,50 +90,87 @@
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
   .summary-strip {
-    display: flex;
-    gap: 16px;
-    padding: 20px 40px;
-    overflow-x: auto;
+    padding: 16px 40px;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
   }
-  .summary-card {
-    flex: 0 0 auto;
-    min-width: 160px;
-    padding: 16px 20px;
-    background: var(--bg);
-    border-radius: 10px;
-    border: 1px solid var(--border);
-  }
-  .summary-card.overall {
-    min-width: 200px;
-    border-color: var(--accent);
+  .summary-overall {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 12px 20px;
     background: linear-gradient(135deg, rgba(108,92,231,0.08), rgba(162,155,254,0.04));
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    margin-bottom: 12px;
   }
-  .summary-card-label {
+  .summary-overall-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .summary-overall-label {
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--text-muted);
-    margin-bottom: 8px;
   }
-  .summary-card-value {
-    font-size: 28px;
+  .summary-overall-value {
+    font-size: 24px;
     font-weight: 700;
   }
-  .summary-card-sub {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 4px;
+  .summary-overall-progress {
+    flex: 1;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 120px;
   }
-  .summary-progress {
-    height: 4px;
+  .summary-overall-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .summary-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .summary-cat-card {
+    padding: 10px 14px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .summary-cat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .summary-cat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--text-muted);
+  }
+  .summary-cat-value {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .summary-cat-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .summary-cat-progress {
+    height: 3px;
     background: var(--surface2);
     border-radius: 2px;
-    margin-top: 10px;
+    margin-top: 6px;
     overflow: hidden;
   }
-  .summary-progress-fill {
+  .summary-cat-progress-fill {
     height: 100%;
     border-radius: 2px;
     transition: width 0.5s ease;
@@ -899,12 +936,126 @@
   .btn-copy:hover { filter: brightness(1.1); }
   .btn-copy.copied { background: var(--green); border-color: var(--green); }
 
+  .flows-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 0;
+  }
+  .flows-category {
+    margin-bottom: 24px;
+  }
+  .flows-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent-light);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .flows-category-progress {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+  .flows-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+  .flows-item:hover {
+    background: var(--surface);
+  }
+  .flows-item.done .flows-item-text {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-muted);
+  }
+  .flows-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.15s;
+  }
+  .flows-checkbox:hover {
+    border-color: var(--accent);
+  }
+  .flows-checkbox.checked {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .flows-item-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.5;
+    cursor: text;
+    padding: 0 4px;
+    border-radius: 4px;
+    min-height: 22px;
+  }
+  .flows-item-text:focus {
+    outline: none;
+    background: var(--surface2);
+  }
+  .flows-item-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .flows-add-btn {
+    background: none;
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 4px;
+    margin-left: 16px;
+    transition: all 0.15s;
+  }
+  .flows-add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-light);
+  }
+  .flows-delete-btn {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    transition: opacity 0.15s;
+  }
+  .flows-item:hover .flows-delete-btn {
+    opacity: 0.6;
+  }
+  .flows-delete-btn:hover {
+    opacity: 1 !important;
+  }
+
   @media (max-width: 1200px) {
     .charts-container { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
     .header, .controls, .main, .summary-strip { padding-left: 16px; padding-right: 16px; }
-    .summary-strip { gap: 10px; }
+    .summary-overall { flex-wrap: wrap; gap: 16px; }
+    .summary-categories { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
@@ -941,6 +1092,10 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg>
       Charts
     </button>
+    <button class="btn" id="btnFlows" onclick="setView('flows')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Flows
+    </button>
   </div>
   <div class="filter-group">
     <span class="filter-label">Area:</span>
@@ -963,6 +1118,7 @@
 <div class="main">
   <div id="tableView"></div>
   <div id="chartView" class="hidden"></div>
+  <div id="flowsView" class="hidden"></div>
 </div>
 
 <script>
@@ -1591,8 +1747,10 @@ function setView(v) {
   currentView = v;
   document.getElementById('btnTable').classList.toggle('btn-active', v === 'table');
   document.getElementById('btnChart').classList.toggle('btn-active', v === 'chart');
+  document.getElementById('btnFlows').classList.toggle('btn-active', v === 'flows');
   document.getElementById('tableView').classList.toggle('hidden', v !== 'table');
   document.getElementById('chartView').classList.toggle('hidden', v !== 'chart');
+  document.getElementById('flowsView').classList.toggle('hidden', v !== 'flows');
   render();
 }
 
@@ -1627,35 +1785,40 @@ function renderSummary() {
   });
 
   let html = `
-    <div class="summary-card overall">
-      <div class="summary-card-label">Overall Progress</div>
-      <div class="summary-card-value" style="color:${getProgressColor(stats.pct)}">${stats.pct}%</div>
-      <div class="summary-card-sub">${stats.done} of ${stats.total} tasks</div>
-      <div class="summary-progress"><div class="summary-progress-fill" style="width:${stats.pct}%;background:${getProgressColor(stats.pct)}"></div></div>
+    <div class="summary-overall">
+      <div class="summary-overall-item">
+        <span class="summary-overall-label">Progress</span>
+        <span class="summary-overall-value" style="color:${getProgressColor(stats.pct)}">${stats.pct}%</span>
+        <span class="summary-cat-sub">${stats.done}/${stats.total} tasks</span>
+      </div>
+      <div class="summary-overall-progress"><div class="summary-overall-progress-fill" style="width:${stats.pct}%;background:${getProgressColor(stats.pct)}"></div></div>
+      <div class="summary-overall-item">
+        <span class="summary-overall-label">Effort</span>
+        <span class="summary-overall-value">${doneEffort}<span style="font-size:13px;color:var(--text-muted)">/${totalEffort}w</span></span>
+      </div>
+      <div class="summary-overall-item">
+        <span class="summary-overall-label">In Progress</span>
+        <span class="summary-overall-value" style="color:var(--blue)">${stats.inProgress}</span>
+      </div>
     </div>
-    <div class="summary-card">
-      <div class="summary-card-label">Effort Done</div>
-      <div class="summary-card-value">${doneEffort}<span style="font-size:14px;color:var(--text-muted)">/${totalEffort}w</span></div>
-      <div class="summary-card-sub">weeks estimated</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-card-label">In Progress</div>
-      <div class="summary-card-value" style="color:var(--blue)">${stats.inProgress}</div>
-      <div class="summary-card-sub">active tasks</div>
-    </div>
+    <div class="summary-categories">
   `;
 
   categories.forEach(cat => {
     const s = getCategoryStats(cat.tasks);
     html += `
-      <div class="summary-card">
-        <div class="summary-card-label">${cat.category}</div>
-        <div class="summary-card-value" style="color:${getProgressColor(s.pct)}">${s.pct}%</div>
-        <div class="summary-card-sub">${s.done}/${s.total}</div>
-        <div class="summary-progress"><div class="summary-progress-fill" style="width:${s.pct}%;background:${getProgressColor(s.pct)}"></div></div>
+      <div class="summary-cat-card">
+        <div class="summary-cat-header">
+          <span class="summary-cat-label">${cat.category}</span>
+          <span class="summary-cat-value" style="color:${getProgressColor(s.pct)}">${s.pct}%</span>
+        </div>
+        <div class="summary-cat-sub">${s.done}/${s.total} tasks</div>
+        <div class="summary-cat-progress"><div class="summary-cat-progress-fill" style="width:${s.pct}%;background:${getProgressColor(s.pct)}"></div></div>
       </div>
     `;
   });
+
+  html += `</div>`;
 
   document.getElementById('summaryStrip').innerHTML = html;
 }
@@ -1888,10 +2051,128 @@ function renderCharts() {
   `;
 }
 
+// ==================== FLOWS CHECKLIST ====================
+const DEFAULT_FLOWS = [
+  { category: 'Reporting', items: [
+    { text: 'By ads report', done: false },
+    { text: 'Creative library report', done: false },
+  ]},
+  { category: 'Creatives', items: [
+    { text: 'Create creative', done: false },
+    { text: 'Delete creative', done: false },
+    { text: 'Edit creative (dependencies: get creative, popup ui, edit creative with edit ads)', done: false },
+    { text: 'Create creatives from bulk excel', done: false },
+  ]},
+  { category: 'Items', items: [
+    { text: 'Edit ad', done: false },
+    { text: 'New assign flow (New Ads)', done: false },
+  ]},
+  { category: 'Campaigns', items: [
+    { text: 'New campaign (dependencies with profile and branding, without library indication)', done: false },
+    { text: 'Edit campaign (with profile and branding, without library indication)', done: false },
+    { text: 'Assign flow from (edit) campaign (patch, create items, complete the transformers refactor, delete items)', done: false },
+    { text: 'Duplicate with ads', done: false },
+  ]},
+];
+
+function loadFlows() {
+  const saved = localStorage.getItem('cl-flows');
+  if (saved) {
+    try { return JSON.parse(saved); } catch(e) {}
+  }
+  return JSON.parse(JSON.stringify(DEFAULT_FLOWS));
+}
+
+function saveFlows(flows) {
+  localStorage.setItem('cl-flows', JSON.stringify(flows));
+}
+
+let flowsData = loadFlows();
+
+function toggleFlowItem(catIdx, itemIdx) {
+  flowsData[catIdx].items[itemIdx].done = !flowsData[catIdx].items[itemIdx].done;
+  saveFlows(flowsData);
+  renderFlows();
+}
+
+function updateFlowText(catIdx, itemIdx, newText) {
+  if (newText.trim()) {
+    flowsData[catIdx].items[itemIdx].text = newText.trim();
+  }
+  saveFlows(flowsData);
+}
+
+function addFlowItem(catIdx) {
+  flowsData[catIdx].items.push({ text: 'New item', done: false });
+  saveFlows(flowsData);
+  renderFlows();
+  // Focus the new item
+  setTimeout(() => {
+    const items = document.querySelectorAll(`.flows-category:nth-child(${catIdx + 1}) .flows-item-text`);
+    const last = items[items.length - 1];
+    if (last) { last.focus(); document.execCommand('selectAll'); }
+  }, 50);
+}
+
+function deleteFlowItem(catIdx, itemIdx) {
+  flowsData[catIdx].items.splice(itemIdx, 1);
+  saveFlows(flowsData);
+  renderFlows();
+}
+
+function addFlowCategory() {
+  const name = prompt('Category name:');
+  if (name && name.trim()) {
+    flowsData.push({ category: name.trim(), items: [{ text: 'New item', done: false }] });
+    saveFlows(flowsData);
+    renderFlows();
+  }
+}
+
+function renderFlows() {
+  const totalItems = flowsData.reduce((s, c) => s + c.items.length, 0);
+  const doneItems = flowsData.reduce((s, c) => s + c.items.filter(i => i.done).length, 0);
+
+  let html = `<div class="flows-container">
+    <div style="text-align:center;margin-bottom:20px;color:var(--text-muted);font-size:13px">
+      Library Flows by Priority &mdash; <strong style="color:var(--text)">${doneItems}/${totalItems}</strong> completed
+    </div>`;
+
+  flowsData.forEach((cat, ci) => {
+    const catDone = cat.items.filter(i => i.done).length;
+    html += `<div class="flows-category">
+      <div class="flows-category-header">
+        <span>${cat.category}</span>
+        <span class="flows-category-progress">${catDone}/${cat.items.length}</span>
+      </div>`;
+
+    cat.items.forEach((item, ii) => {
+      html += `<div class="flows-item ${item.done ? 'done' : ''}">
+        <div class="flows-checkbox ${item.done ? 'checked' : ''}" onclick="toggleFlowItem(${ci},${ii})">
+          ${item.done ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
+        </div>
+        <div class="flows-item-text" contenteditable="true" spellcheck="false"
+             onblur="updateFlowText(${ci},${ii},this.innerText)"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${item.text}</div>
+        <button class="flows-delete-btn" onclick="deleteFlowItem(${ci},${ii})" title="Remove">&times;</button>
+      </div>`;
+    });
+
+    html += `<button class="flows-add-btn" onclick="addFlowItem(${ci})">+ Add item</button>`;
+    html += `</div>`;
+  });
+
+  html += `<button class="flows-add-btn" onclick="addFlowCategory()" style="margin-left:0;margin-top:16px">+ Add category</button>`;
+  html += `</div>`;
+
+  document.getElementById('flowsView').innerHTML = html;
+}
+
 function render() {
   renderSummary();
   if (currentView === 'table') renderTable();
-  else renderCharts();
+  else if (currentView === 'chart') renderCharts();
+  else if (currentView === 'flows') renderFlows();
 }
 
 async function refreshFromSheet() {
