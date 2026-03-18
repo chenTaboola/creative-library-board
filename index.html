@@ -1629,12 +1629,19 @@ function getCategoryStats(tasks) {
   const done = tasks.filter(t => isTaskDone(t)).length;
   const inProgress = tasks.filter(t => !isTaskDone(t) && (t.status === 'In Progress' || (t.jiraStatus && JIRA_PROGRESS_STATUSES.has(t.jiraStatus)))).length;
 
-  // Effort-weighted percentage
+  // Effort-weighted percentage with partial credit for in-progress statuses
   let totalWeight = 0, doneWeight = 0;
   tasks.forEach(t => {
     const w = t.effort > 0 ? t.effort : DEFAULT_WEIGHT;
     totalWeight += w;
-    if (isTaskDone(t)) doneWeight += w;
+    if (isTaskDone(t)) {
+      doneWeight += w;
+    } else {
+      const es = getEffectiveStatus(t);
+      if (es === 'In Verification' || es === 'In Grooming') doneWeight += w * 0.9;
+      else if (es === 'Pull Request') doneWeight += w * 0.8;
+      else if (es === 'In Progress' || es === 'In Development') doneWeight += w * 0.4;
+    }
   });
   const pct = totalWeight > 0 ? Math.round((doneWeight / totalWeight) * 100) : 0;
 
@@ -2182,10 +2189,8 @@ async function refreshFromSheet() {
   icon.style.display = 'none';
 
   const loaded = await loadFromSheet();
-  if (!loaded) {
-    // Also try Jira sync
-    await refreshJiraStatuses();
-  }
+  // Always sync Jira statuses and discover new tickets
+  await refreshJiraStatuses();
   render();
 
   spinner.style.display = 'none';
@@ -2194,73 +2199,71 @@ async function refreshFromSheet() {
 
 // ==================== JIRA SYNC ====================
 async function refreshJiraStatuses() {
+  if (!APPS_SCRIPT_URL) {
+    console.warn('No Apps Script URL configured - cannot sync Jira');
+    return;
+  }
+
+  // Helper: query Jira via Apps Script proxy
+  async function jiraQuery(jql, fields, maxResults) {
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'jiraQuery', jql, fields, maxResults: maxResults || 100 }),
+    });
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.error || 'Jira query failed');
+    return data;
+  }
+
   // 1. Fetch sub-epics under DEV-213547
   try {
-    const epicJql = 'parent = DEV-213547 AND issuetype = Epic ORDER BY key ASC';
-    const epicResp = await fetch(`https://tbla.atlassian.net/rest/api/2/search?jql=${encodeURIComponent(epicJql)}&fields=summary,status&maxResults=50`, {
-      credentials: 'include'
+    const epicData = await jiraQuery('parent = DEV-213547 AND issuetype = Epic ORDER BY key ASC', 'summary,status', 50);
+    AVAILABLE_EPICS = [{ key: 'DEV-213547', summary: 'Creative Library Management (parent)' }];
+    epicData.issues.forEach(i => {
+      AVAILABLE_EPICS.push({ key: i.key, summary: i.fields.summary });
     });
-    if (epicResp.ok) {
-      const epicData = await epicResp.json();
-      AVAILABLE_EPICS = [{ key: 'DEV-213547', summary: 'Creative Library Management (parent)' }];
-      epicData.issues.forEach(i => {
-        AVAILABLE_EPICS.push({ key: i.key, summary: i.fields.summary });
-      });
-      autoMapEpics();
-      console.info('Updated epic list:', AVAILABLE_EPICS.length, 'epics');
-    }
+    autoMapEpics();
+    console.info('Updated epic list:', AVAILABLE_EPICS.length, 'epics');
   } catch (e) {
     console.warn('Could not fetch epics:', e.message);
   }
 
   // 2. Fetch task statuses
   const jiraTickets = TASKS.filter(t => t.jira).map(t => t.jira);
-  if (jiraTickets.length === 0) return;
-  const jql = `key in (${jiraTickets.join(',')})`;
-
-  try {
-    const resp = await fetch(`https://tbla.atlassian.net/rest/api/2/search?jql=${encodeURIComponent(jql)}&fields=status&maxResults=100`, {
-      credentials: 'include'
-    });
-    if (resp.ok) {
-      const data = await resp.json();
+  if (jiraTickets.length > 0) {
+    try {
+      const jql = `key in (${jiraTickets.join(',')})`;
+      const data = await jiraQuery(jql, 'status', 200);
       const statusMap = {};
       data.issues.forEach(i => { statusMap[i.key] = i.fields.status.name; });
       const updates = [];
       TASKS.forEach(t => {
         if (t.jira && statusMap[t.jira]) {
-          const oldJiraStatus = t.jiraStatus;
           t.jiraStatus = statusMap[t.jira];
-          // Auto-update dashboard status when Jira says done
           if (JIRA_DONE_STATUSES.has(t.jiraStatus) && t.status !== 'Done') {
             t.status = 'Done';
             updates.push(t);
-          }
-          // Auto-update to In Progress if Jira is in progress and dashboard still says Not Started
-          else if (JIRA_PROGRESS_STATUSES.has(t.jiraStatus) && t.status === 'Not Started Yet') {
+          } else if (JIRA_PROGRESS_STATUSES.has(t.jiraStatus) && t.status === 'Not Started Yet') {
             t.status = 'In Progress';
             updates.push(t);
           }
         }
       });
       // Write status changes back to Google Sheet
-      if (APPS_SCRIPT_URL && updates.length > 0) {
-        for (const t of updates) {
-          try {
-            await fetch(APPS_SCRIPT_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain' },
-              body: JSON.stringify({ action: 'updateStatus', id: t.id, status: t.status }),
-            });
-          } catch (e) { /* silent */ }
-        }
-        console.info(`Synced ${updates.length} status changes from Jira to sheet`);
+      for (const t of updates) {
+        try {
+          await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'updateStatus', id: t.id, status: t.status }),
+          });
+        } catch (e) { /* silent */ }
       }
-    } else {
-      console.warn('Jira API returned', resp.status, '- make sure you are logged into Jira in this browser');
+      if (updates.length > 0) console.info(`Synced ${updates.length} status changes from Jira`);
+    } catch (e) {
+      console.warn('Could not sync Jira statuses:', e.message);
     }
-  } catch (e) {
-    console.warn('Could not reach Jira API:', e.message, '- CORS may block this from a local file. Try opening from a web server.');
   }
 
   // 3. Discover new tickets under mapped epics
@@ -2268,6 +2271,7 @@ async function refreshJiraStatuses() {
 }
 
 async function discoverNewJiraTickets() {
+  if (!APPS_SCRIPT_URL) return;
   const existingJiraKeys = new Set(TASKS.filter(t => t.jira).map(t => t.jira));
   const epicToCategory = {};
   for (const [cat, epic] of Object.entries(CATEGORY_EPIC_MAP)) {
@@ -2276,14 +2280,20 @@ async function discoverNewJiraTickets() {
   const categoryArea = { 'UI': 'Realize - UI' };
   const epicKeys = [...new Set(Object.values(CATEGORY_EPIC_MAP))];
 
-  // Fetch all stories under these epics in one query
   const jql = `parent in (${epicKeys.join(',')}) AND issuetype in (Story, Task, Bug) ORDER BY key ASC`;
+  console.info('[Discover] Querying via Apps Script proxy...');
   try {
-    const resp = await fetch(`https://tbla.atlassian.net/rest/api/2/search?jql=${encodeURIComponent(jql)}&fields=summary,status,parent,assignee&maxResults=200`, {
-      credentials: 'include'
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'jiraQuery', jql, fields: 'summary,status,parent,assignee', maxResults: 200 }),
     });
-    if (!resp.ok) return;
     const data = await resp.json();
+    if (!data.success) {
+      console.warn('[Discover] Proxy error:', data.error);
+      return;
+    }
+    console.info('[Discover] Jira returned', data.total, 'issues');
     let newCount = 0;
 
     for (const issue of data.issues) {
@@ -2304,35 +2314,30 @@ async function discoverNewJiraTickets() {
       const newTask = {
         id: maxId + 1, area, category,
         task: issue.fields.summary,
-        desc: '',
-        effort: 0,
-        status,
-        developer: assignee,
-        beta: false,
-        jira: issue.key,
-        jiraStatus,
+        desc: '', effort: 0, status,
+        developer: assignee, beta: true,
+        jira: issue.key, jiraStatus,
       };
       TASKS.push(newTask);
       existingJiraKeys.add(issue.key);
       newCount++;
+      console.info(`[Discover] Added: ${issue.key} -> ${category}`);
 
       // Write to Google Sheet
-      if (APPS_SCRIPT_URL) {
-        try {
-          await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({
-              action: 'addTask',
-              task: { id: newTask.id, area, category, task: newTask.task, description: '', effort: 0, status: newTask.status, developer: assignee, beta: 'No', jira: issue.key }
-            }),
-          });
-        } catch (e) { /* silent */ }
-      }
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action: 'addTask',
+            task: { id: newTask.id, area, category, task: newTask.task, description: '', effort: 0, status: newTask.status, developer: assignee, beta: 'Yes', jira: issue.key }
+          }),
+        });
+      } catch (e) { /* silent */ }
     }
-    if (newCount > 0) console.info(`Discovered ${newCount} new Jira tickets`);
+    console.info(`[Discover] Done. Added ${newCount} new tickets.`);
   } catch (e) {
-    console.warn('Could not discover new tickets:', e.message);
+    console.warn('[Discover] Failed:', e.message);
   }
 }
 
