@@ -2262,6 +2262,78 @@ async function refreshJiraStatuses() {
   } catch (e) {
     console.warn('Could not reach Jira API:', e.message, '- CORS may block this from a local file. Try opening from a web server.');
   }
+
+  // 3. Discover new tickets under mapped epics
+  await discoverNewJiraTickets();
+}
+
+async function discoverNewJiraTickets() {
+  const existingJiraKeys = new Set(TASKS.filter(t => t.jira).map(t => t.jira));
+  const epicToCategory = {};
+  for (const [cat, epic] of Object.entries(CATEGORY_EPIC_MAP)) {
+    epicToCategory[epic] = cat;
+  }
+  const categoryArea = { 'UI': 'Realize - UI' };
+  const epicKeys = [...new Set(Object.values(CATEGORY_EPIC_MAP))];
+
+  // Fetch all stories under these epics in one query
+  const jql = `parent in (${epicKeys.join(',')}) AND issuetype in (Story, Task, Bug) ORDER BY key ASC`;
+  try {
+    const resp = await fetch(`https://tbla.atlassian.net/rest/api/2/search?jql=${encodeURIComponent(jql)}&fields=summary,status,parent,assignee&maxResults=200`, {
+      credentials: 'include'
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    let newCount = 0;
+
+    for (const issue of data.issues) {
+      if (existingJiraKeys.has(issue.key)) continue;
+
+      const parentKey = issue.fields.parent?.key;
+      const category = epicToCategory[parentKey];
+      if (!category) continue;
+
+      const area = categoryArea[category] || 'Backstage';
+      const jiraStatus = issue.fields.status.name;
+      let status = 'Not Started Yet';
+      if (JIRA_DONE_STATUSES.has(jiraStatus)) status = 'Done';
+      else if (JIRA_PROGRESS_STATUSES.has(jiraStatus)) status = 'In Progress';
+
+      const assignee = issue.fields.assignee?.displayName || '';
+      const maxId = Math.max(...TASKS.map(t => t.id), 0);
+      const newTask = {
+        id: maxId + 1, area, category,
+        task: issue.fields.summary,
+        desc: '',
+        effort: 0,
+        status,
+        developer: assignee,
+        beta: false,
+        jira: issue.key,
+        jiraStatus,
+      };
+      TASKS.push(newTask);
+      existingJiraKeys.add(issue.key);
+      newCount++;
+
+      // Write to Google Sheet
+      if (APPS_SCRIPT_URL) {
+        try {
+          await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action: 'addTask',
+              task: { id: newTask.id, area, category, task: newTask.task, description: '', effort: 0, status: newTask.status, developer: assignee, beta: 'No', jira: issue.key }
+            }),
+          });
+        } catch (e) { /* silent */ }
+      }
+    }
+    if (newCount > 0) console.info(`Discovered ${newCount} new Jira tickets`);
+  } catch (e) {
+    console.warn('Could not discover new tickets:', e.message);
+  }
 }
 
 // ==================== CREATE TASK ====================
